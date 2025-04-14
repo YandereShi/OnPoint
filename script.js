@@ -274,12 +274,23 @@ function generateRandomCode(length) {
     return result;
 }
 
+// [Previous code remains the same until the updateSidebar function]
+
 function updateSidebar() {
+    const dashboardLink = document.getElementById('dashboardLink');
     const chatsLink = document.getElementById('chatsLink');
+    const calendarLink = document.getElementById('calendarLink');
     const tasksLink = document.getElementById('tasksLink');
     const myGroupLink = document.getElementById('myGroupLink');
     const upgradeLink = document.getElementById('upgradeLink');
     const profileLink = document.getElementById('profileLink');
+    const settingsLink = document.getElementById('settingsLink');
+    const helpLink = document.getElementById('helpLink');
+    
+    // Remove all active classes first
+    document.querySelectorAll('.sidebar a').forEach(link => {
+        link.classList.remove('active');
+    });
     
     if (userType === 'solo') {
         chatsLink.style.display = 'none';
@@ -296,6 +307,107 @@ function updateSidebar() {
     }
 }
 
+// Navigation functions
+function showDashboard() {
+    document.getElementById('dashboardView').style.display = 'block';
+    document.getElementById('calendarView').style.display = 'none';
+    document.getElementById('contentTitle').textContent = 'My Projects';
+    document.getElementById('dashboardLink').classList.add('active');
+    document.getElementById('calendarLink').classList.remove('active');
+}
+
+function showCalendar() {
+    document.getElementById('dashboardView').style.display = 'none';
+    document.getElementById('calendarView').style.display = 'block';
+    document.getElementById('contentTitle').textContent = 'Calendar';
+    document.getElementById('dashboardLink').classList.remove('active');
+    document.getElementById('calendarLink').classList.add('active');
+    generateCalendar(currentDate);
+}
+
+// Calendar functionality
+let currentDate = new Date();
+
+function generateCalendar(date) {
+    const calendarDays = document.getElementById('calendarDays');
+    const currentMonthYear = document.getElementById('currentMonthYear');
+    
+    // Clear previous calendar days
+    calendarDays.innerHTML = '';
+    
+    // Set month and year header
+    const monthNames = ["January", "February", "March", "April", "May", "June",
+                       "July", "August", "September", "October", "November", "December"];
+    currentMonthYear.textContent = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+    
+    // Get first day of month and total days in month
+    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+    const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    
+    // Get days from previous month to show
+    const prevMonthDays = firstDay.getDay();
+    
+    // Get days from next month to show
+    const nextMonthDays = 6 - lastDay.getDay();
+    
+    // Previous month days
+    const prevMonthLastDay = new Date(date.getFullYear(), date.getMonth(), 0).getDate();
+    for (let i = prevMonthDays - 1; i >= 0; i--) {
+        const dayElement = document.createElement('div');
+        dayElement.classList.add('prev-month');
+        dayElement.textContent = prevMonthLastDay - i;
+        calendarDays.appendChild(dayElement);
+    }
+    
+    // Current month days
+    const today = new Date();
+    for (let i = 1; i <= daysInMonth; i++) {
+        const dayElement = document.createElement('div');
+        dayElement.textContent = i;
+        
+        // Highlight today
+        if (date.getFullYear() === today.getFullYear() && 
+            date.getMonth() === today.getMonth() && 
+            i === today.getDate()) {
+            dayElement.classList.add('today');
+        }
+        
+        calendarDays.appendChild(dayElement);
+    }
+    
+    // Next month days
+    for (let i = 1; i <= nextMonthDays; i++) {
+        const dayElement = document.createElement('div');
+        dayElement.classList.add('next-month');
+        dayElement.textContent = i;
+        calendarDays.appendChild(dayElement);
+    }
+}
+
+// Event listeners for navigation
+document.getElementById('dashboardLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    showDashboard();
+});
+
+document.getElementById('calendarLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    showCalendar();
+});
+
+// Event listeners for calendar navigation
+document.getElementById('prevMonth').addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    generateCalendar(currentDate);
+});
+
+document.getElementById('nextMonth').addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    generateCalendar(currentDate);
+});
+
+// [Rest of your existing JavaScript code remains the same]
 logoutBtn.addEventListener("click", (e) => {
     e.preventDefault();
     userType = null;
@@ -490,3 +602,88 @@ document.querySelectorAll('button, a').forEach(btn => {
         this.classList.remove('touch-active');
     });
 });
+
+document.getElementById('calendarLink').addEventListener('click', function(e) {
+    e.preventDefault();
+    toggleView('calendar');
+});
+
+function toggleView(view) {
+    const contentTitle = document.getElementById('contentTitle');
+    const projectContainer = document.getElementById('projectContainer');
+    const calendarContainer = document.getElementById('calendarContainer');
+    const calendarEl = document.getElementById('calendar');
+    
+    if (view === 'calendar') {
+        if (!window.calendar) {
+            window.calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                events: [
+                    {
+                        title: 'Team Meeting',
+                        start: new Date(),
+                        color: '#f0c14b'
+                    }
+                ],
+                eventClick: function(info) {
+                    alert('Event: ' + info.event.title);
+                },
+                dateClick: function(info) {
+                    alert('Clicked on: ' + info.dateStr);
+                }
+            });
+            window.calendar.render();
+        }
+        
+        contentTitle.textContent = 'Calendar';
+        projectContainer.style.display = 'none';
+        calendarContainer.style.display = 'block';
+        window.calendar.render();
+    } else {
+        contentTitle.textContent = 'My Projects';
+        projectContainer.style.display = 'grid';
+        calendarContainer.style.display = 'none';
+    }
+}
+// Event listeners for sidebar navigation
+document.getElementById('settingsLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    showSettingsPopup();
+});
+
+document.getElementById('upgradeLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    openModal();
+});
+
+// Update showDashboard function to include active states
+function showDashboard() {
+    document.getElementById('dashboardView').style.display = 'block';
+    document.getElementById('calendarView').style.display = 'none';
+    document.getElementById('contentTitle').textContent = 'My Projects';
+    
+    // Remove all active states
+    document.querySelectorAll('.sidebar a').forEach(link => {
+        link.classList.remove('active');
+    });
+    document.getElementById('dashboardLink').classList.add('active');
+}
+
+// Update showCalendar function to include active states
+function showCalendar() {
+    document.getElementById('dashboardView').style.display = 'none';
+    document.getElementById('calendarView').style.display = 'block';
+    document.getElementById('contentTitle').textContent = 'Calendar';
+    
+    // Remove all active states
+    document.querySelectorAll('.sidebar a').forEach(link => {
+        link.classList.remove('active');
+    });
+    document.getElementById('calendarLink').classList.add('active');
+    generateCalendar(currentDate);
+}
