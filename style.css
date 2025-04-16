@@ -1182,3 +1182,57 @@ button, a, input, .card, .choice-card, .fab {
 .sidebar a:active {
     transform: scale(0.98);
 }
+/* Sorting styles */
+.sort-container {
+    position: relative;
+    margin-left: auto;
+}
+
+.sort-select {
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    appearance: none;
+    padding-right: 30px;
+    transition: all 0.3s ease;
+}
+
+.sort-select:hover {
+    border-color: var(--primary-color);
+}
+
+.sort-container::after {
+    content: "▼";
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    color: var(--text-color);
+    pointer-events: none;
+    font-size: 10px;
+}
+
+@media (max-width: 768px) {
+    .sort-select {
+        padding: 10px 30px 10px 12px;
+    }
+    
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .sort-container {
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    .sort-select {
+        width: 100%;
+    }
+}

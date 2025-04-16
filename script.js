@@ -22,7 +22,7 @@ const submitCodeBtn = document.getElementById("submitCodeBtn");
 const groupCodePopup = document.getElementById("groupCodePopup");
 const groupCodeDisplay = document.getElementById("groupCodeDisplay");
 const codeEntryPopup = document.getElementById("codeEntryPopup");
-
+const sortSelect = document.getElementById('sortSelect');
 const projectContainer = document.getElementById("projectContainer");
 const noProjectsMsg = document.getElementById("noProjectsMsg");
 const projectPopup = document.getElementById("projectPopup");
@@ -407,6 +407,7 @@ document.getElementById('nextMonth').addEventListener('click', () => {
     generateCalendar(currentDate);
 });
 
+
 // [Rest of your existing JavaScript code remains the same]
 logoutBtn.addEventListener("click", (e) => {
     e.preventDefault();
@@ -459,6 +460,7 @@ function addProject() {
     let project = document.createElement("div");
     project.classList.add("card");
     project.textContent = projectName;
+    project.dataset.created = new Date().toISOString();
 
     project.addEventListener("contextmenu", function(e) {
         e.preventDefault();
@@ -572,6 +574,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 document.addEventListener('touchstart', function() {}, {passive: true});
+sortSelect.addEventListener('change', sortProjects);
 
 let lastTouchTime = 0;
 document.addEventListener('touchend', function(event) {
@@ -686,4 +689,26 @@ function showCalendar() {
     });
     document.getElementById('calendarLink').classList.add('active');
     generateCalendar(currentDate);
+}
+function sortProjects() {
+    const projects = Array.from(document.querySelectorAll('.card'));
+    const sortValue = sortSelect.value;
+    
+    projects.sort((a, b) => {
+        if (sortValue === 'name-asc') {
+            return a.textContent.localeCompare(b.textContent);
+        } else if (sortValue === 'name-desc') {
+            return b.textContent.localeCompare(a.textContent);
+        } else if (sortValue === 'date-asc') {
+            return new Date(a.dataset.created) - new Date(b.dataset.created);
+        } else if (sortValue === 'date-desc') {
+            return new Date(b.dataset.created) - new Date(a.dataset.created);
+        }
+        return 0;
+    });
+    
+    // Re-append sorted projects
+    projects.forEach(project => {
+        projectContainer.insertBefore(project, noProjectsMsg);
+    });
 }
