@@ -51,8 +51,6 @@ window.addEventListener('DOMContentLoaded', function() {
     choicePage.style.display = "none";
     roleChoicePage.style.display = "none";
     planChoicePage.style.display = "none";
-    
-    // Initialize dark mode toggle
     if (localStorage.getItem('darkMode') === 'true') {
         document.body.classList.add('dark-mode');
         darkModeToggle.checked = true;
@@ -331,8 +329,6 @@ function showDashboard() {
     document.getElementById('dashboardLink').classList.add('active');
     document.getElementById('calendarLink').classList.remove('active');
     document.getElementById('profileLink').classList.remove('active');
-    
-    // Show sort and FAB only on dashboard
     dashboardTopbar.style.display = 'flex';
     fabButton.style.display = 'flex';
 }
@@ -346,8 +342,7 @@ function showCalendar() {
     document.getElementById('calendarLink').classList.add('active');
     document.getElementById('profileLink').classList.remove('active');
     generateCalendar(currentDate);
-    
-    // Hide sort and FAB on calendar
+
     dashboardTopbar.style.display = 'none';
     fabButton.style.display = 'none';
 }
@@ -360,12 +355,9 @@ function showProfile() {
     document.getElementById('dashboardLink').classList.remove('active');
     document.getElementById('calendarLink').classList.remove('active');
     document.getElementById('profileLink').classList.add('active');
-    
-    // Hide sort and FAB on profile
     dashboardTopbar.style.display = 'none';
     fabButton.style.display = 'none';
-    
-    // Load profile data
+
     const username = document.getElementById('loginUsername').value.trim() || 
                     document.getElementById('registerUsername').value.trim() || 
                     'User';
@@ -642,7 +634,6 @@ function sortProjects() {
     });
 }
 
-// Profile picture upload functionality
 changePictureBtn.addEventListener('click', () => {
     profileUpload.click();
 });
