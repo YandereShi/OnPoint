@@ -135,7 +135,7 @@
             <a href="#" id="helpLink"><i class="fas fa-question-circle"></i><span>Help</span></a>
         </div>
         <div class="content">
-            <div class="topbar">
+            <div class="topbar" id="dashboardTopbar">
                 <h1 id="contentTitle">My Projects</h1>
                 <div class="sort-container">
                     <select id="sortSelect" class="sort-select">
@@ -175,12 +175,13 @@
                     <div class="profile-header">
                         <div class="profile-picture">
                             <img src="https://via.placeholder.com/150" alt="Profile Picture" id="profileImg">
-                            <button class="change-picture-btn"><i class="fas fa-camera"></i> Change</button>
+                            <input type="file" id="profileUpload" accept="image/*" style="display: none;">
+                            <button class="change-picture-btn" id="changePictureBtn"><i class="fas fa-camera"></i> Change</button>
                         </div>
-                        <h2>Profile</h2>
                     </div>
                     
                     <div class="profile-section">
+                        <h2 class="profile-title">Profile</h2>
                         <h3>Name:</h3>
                         <p id="profileName"></p>
                         
@@ -214,14 +215,14 @@
                         </div>
                         
                         <div class="setting-item">
-                            <span>Privacy:</span>
                             <div class="privacy-toggle">
+                                <div class="privacy-tooltip">?</div>
+                                <div class="privacy-popup">On - your profile is public, Off - anyone can't access your profile</div>
+                                <span>Privacy:</span>
                                 <label class="theme-switch">
                                     <input type="checkbox" id="privacyToggle">
                                     <div class="slider"></div>
                                 </label>
-                                <div class="privacy-tooltip">?</div>
-                                <div class="privacy-popup">On - your profile is public, Off - anyone can't access your profile</div>
                             </div>
                         </div>
                         
@@ -236,14 +237,14 @@
             </div>
         </div>
 
-        <div class="fab" onclick="showProjectPopup()">+</div>
+        <div class="fab" id="fabButton">+</div>
 
         <div id="projectPopup" class="popup">
             <h2>New Project</h2>
             <input type="text" id="projectNameInput" placeholder="Project Name">
             <div class="popup-buttons">
-                <button class="yes-btn" onclick="addProject()">Create</button>
-                <button class="cancel-btn" onclick="closeProjectPopup()">Cancel</button>
+                <button class="yes-btn">Create</button>
+                <button class="cancel-btn">Cancel</button>
             </div>
         </div>
 

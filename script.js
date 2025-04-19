@@ -36,6 +36,10 @@ const profileLogoutBtn = document.getElementById('profileLogoutBtn');
 const darkModeToggle = document.getElementById('darkModeToggle');
 const notificationToggle = document.getElementById('notificationToggle');
 const privacyToggle = document.getElementById('privacyToggle');
+const dashboardTopbar = document.getElementById('dashboardTopbar');
+const fabButton = document.getElementById('fabButton');
+const changePictureBtn = document.getElementById('changePictureBtn');
+const profileUpload = document.getElementById('profileUpload');
 
 let selectedProject = null;
 let userType = null;
@@ -327,6 +331,10 @@ function showDashboard() {
     document.getElementById('dashboardLink').classList.add('active');
     document.getElementById('calendarLink').classList.remove('active');
     document.getElementById('profileLink').classList.remove('active');
+    
+    // Show sort and FAB only on dashboard
+    dashboardTopbar.style.display = 'flex';
+    fabButton.style.display = 'flex';
 }
 
 function showCalendar() {
@@ -338,6 +346,10 @@ function showCalendar() {
     document.getElementById('calendarLink').classList.add('active');
     document.getElementById('profileLink').classList.remove('active');
     generateCalendar(currentDate);
+    
+    // Hide sort and FAB on calendar
+    dashboardTopbar.style.display = 'none';
+    fabButton.style.display = 'none';
 }
 
 function showProfile() {
@@ -348,6 +360,10 @@ function showProfile() {
     document.getElementById('dashboardLink').classList.remove('active');
     document.getElementById('calendarLink').classList.remove('active');
     document.getElementById('profileLink').classList.add('active');
+    
+    // Hide sort and FAB on profile
+    dashboardTopbar.style.display = 'none';
+    fabButton.style.display = 'none';
     
     // Load profile data
     const username = document.getElementById('loginUsername').value.trim() || 
@@ -491,6 +507,7 @@ function addProject() {
     closeProjectPopup();
 }
 
+
 function deleteProject() {
     if (selectedProject) {
         projectContainer.removeChild(selectedProject);
@@ -599,6 +616,9 @@ document.getElementById('upgradeLink').addEventListener('click', (e) => {
     e.preventDefault();
     openModal();
 });
+fabButton.addEventListener("click", showProjectPopup);
+document.querySelector('#projectPopup .yes-btn').addEventListener('click', addProject);
+document.querySelector('#projectPopup .cancel-btn').addEventListener('click', closeProjectPopup);
 
 function sortProjects() {
     const projects = Array.from(document.querySelectorAll('.card'));
@@ -621,3 +641,19 @@ function sortProjects() {
         projectContainer.insertBefore(project, noProjectsMsg);
     });
 }
+
+// Profile picture upload functionality
+changePictureBtn.addEventListener('click', () => {
+    profileUpload.click();
+});
+
+profileUpload.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            document.getElementById('profileImg').src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
