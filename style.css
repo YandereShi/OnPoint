@@ -85,7 +85,6 @@ body {
     opacity: 0.9;
 }
 
-
 .get-started-btn {
     color: white;
     text-shadow: 2px 2px 4px black;
@@ -398,7 +397,14 @@ body {
     transform: translateX(5px);
 }
 
+.sidebar a.active {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateX(5px);
+}
 
+.sidebar a:active {
+    transform: scale(0.98);
+}
 
 .content {
     flex: 1;
@@ -422,6 +428,39 @@ body {
 .topbar h1 {
     font-size: 24px;
     font-weight: 600;
+}
+
+.sort-container {
+    position: relative;
+    margin-left: auto;
+}
+
+.sort-select {
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    appearance: none;
+    padding-right: 30px;
+    transition: all 0.3s ease;
+}
+
+.sort-select:hover {
+    border-color: var(--primary-color);
+}
+
+.sort-container::after {
+    content: "▼";
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    color: var(--text-color);
+    pointer-events: none;
+    font-size: 10px;
 }
 
 .grid-container {
@@ -777,11 +816,242 @@ input:checked + .slider:before {
     to { opacity: 1; }
 }
 
+.profile-container {
+    background: var(--card-bg);
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 4px 10px var(--shadow-color);
+    border: 1px solid var(--border-color);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+    gap: 30px;
+}
+
+.profile-picture {
+    position: relative;
+    width: 150px;
+    height: 150px;
+}
+
+.profile-picture img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--primary-color);
+}
+
+.change-picture-btn {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: var(--primary-color);
+    color: var(--button-text);
+    border: none;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.profile-section h3, .settings-section h2, .settings-section h3 {
+    color: var(--primary-color);
+    margin: 20px 0 10px;
+}
+
+.profile-section p {
+    margin-bottom: 20px;
+    padding: 10px;
+    background: var(--input-bg);
+    border-radius: 8px;
+}
+
+#profileBio {
+    width: 100%;
+    min-height: 100px;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    color: var(--text-color);
+    resize: vertical;
+}
+
+.settings-section {
+    margin-top: 40px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 30px;
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.change-password-btn {
+    background: var(--primary-color);
+    color: var(--button-text);
+    border: none;
+    padding: 8px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.logout-btn {
+    width: 100%;
+    background: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.logout-btn:hover {
+    background: #ff3333;
+}
+
+.privacy-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+}
+
+.privacy-tooltip {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: var(--button-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    cursor: help;
+}
+
+.privacy-popup {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: var(--card-bg);
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px var(--shadow-color);
+    width: 200px;
+    font-size: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 100;
+}
+
+.privacy-tooltip:hover + .privacy-popup {
+    opacity: 1;
+}
+
+.calendar-container {
+    padding: 20px;
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.calendar-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.calendar-header button {
+    background: var(--input-bg);
+    border: none;
+    color: var(--text-color);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.calendar-header button:hover {
+    background: var(--primary-color);
+    color: var(--button-text);
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--text-color);
+}
+
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+}
+
+.calendar-days div {
+    padding: 12px 0;
+    text-align: center;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-color);
+}
+
+.calendar-days div:hover {
+    background: var(--input-bg);
+}
+
+.calendar-days .prev-month,
+.calendar-days .next-month {
+    color: var(--border-color);
+}
+
+.calendar-days .today {
+    background: var(--primary-color);
+    color: var(--button-text);
+    font-weight: bold;
+}
+
+.content-view {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
 @media (max-width: 768px) {
-    .sidebar-section {
-        display: none;
-    }
-    
     .sidebar {
         width: 70px;
         padding: 20px 10px;
@@ -861,10 +1131,37 @@ input:checked + .slider:before {
     .login-container.active .overlay {
         transform: none;
     }
+
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .profile-picture {
+        margin-bottom: 20px;
+    }
+
+    .sort-select {
+        padding: 10px 30px 10px 12px;
+    }
+    
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .sort-container {
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    .sort-select {
+        width: 100%;
+    }
 }
 
 @media (max-width: 480px) {
-
     button, .choice-card, .card, .sidebar a, .fab {
         min-height: 44px;
     }
@@ -1037,202 +1334,4 @@ button, a, input, .card, .choice-card, .fab {
     letter-spacing: 3px;
     font-size: 18px;
     font-weight: bold;
-}
-
-.calendar-container {
-    padding: 20px;
-    width: 100%;
-    max-width: 1000px;
-    margin: 0 auto;
-}
-
-#calendar {
-    background: var(--card-bg);
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 4px 10px var(--shadow-color);
-    border: 1px solid var(--border-color);
-}
-
-.fc { 
-    color: var(--text-color);
-}
-
-.fc-header-toolbar {
-    margin-bottom: 1em;
-}
-
-.fc-toolbar-title {
-    font-size: 1.2em;
-    font-weight: 600;
-}
-
-.fc-button {
-    background-color: var(--primary-color) !important;
-    color: var(--button-text) !important;
-    border: none !important;
-    border-radius: 8px !important;
-    padding: 6px 12px !important;
-}
-
-.fc-button:hover {
-    background-color: var(--primary-hover) !important;
-}
-
-.fc-daygrid-day-number, 
-.fc-col-header-cell-cushion {
-    color: var(--text-color);
-}
-
-.fc-daygrid-day.fc-day-today {
-    background-color: rgba(240, 193, 75, 0.2) !important;
-}
-/* Content View Styles */
-.content-view {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-}
-
-/* Calendar Container Styles */
-.calendar-container {
-    background: var(--card-bg);
-    border-radius: 15px;
-    padding: 20px;
-    box-shadow: 0 4px 10px var(--shadow-color);
-    border: 1px solid var(--border-color);
-}
-
-.calendar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.calendar-header h3 {
-    margin: 0;
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--text-color);
-}
-
-.calendar-header button {
-    background: var(--input-bg);
-    border: none;
-    color: var(--text-color);
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 16px;
-    transition: all 0.3s ease;
-}
-
-.calendar-header button:hover {
-    background: var(--primary-color);
-    color: var(--button-text);
-}
-
-.calendar-weekdays {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    text-align: center;
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: var(--text-color);
-}
-
-.calendar-days {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 10px;
-}
-
-.calendar-days div {
-    padding: 12px 0;
-    text-align: center;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    color: var(--text-color);
-}
-
-.calendar-days div:hover {
-    background: var(--input-bg);
-}
-
-.calendar-days .prev-month,
-.calendar-days .next-month {
-    color: var(--border-color);
-}
-
-.calendar-days .today {
-    background: var(--primary-color);
-    color: var(--button-text);
-    font-weight: bold;
-}
-.sidebar a.active {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateX(5px);
-}
-
-.sidebar a:active {
-    transform: scale(0.98);
-}
-/* Sorting styles */
-.sort-container {
-    position: relative;
-    margin-left: auto;
-}
-
-.sort-select {
-    background-color: var(--input-bg);
-    color: var(--text-color);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 14px;
-    cursor: pointer;
-    appearance: none;
-    padding-right: 30px;
-    transition: all 0.3s ease;
-}
-
-.sort-select:hover {
-    border-color: var(--primary-color);
-}
-
-.sort-container::after {
-    content: "▼";
-    position: absolute;
-    top: 50%;
-    right: 12px;
-    transform: translateY(-50%);
-    color: var(--text-color);
-    pointer-events: none;
-    font-size: 10px;
-}
-
-@media (max-width: 768px) {
-    .sort-select {
-        padding: 10px 30px 10px 12px;
-    }
-    
-    .topbar {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-    
-    .sort-container {
-        margin-left: 0;
-        width: 100%;
-    }
-    
-    .sort-select {
-        width: 100%;
-    }
 }

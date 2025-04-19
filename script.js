@@ -14,8 +14,6 @@ const overlayText = document.getElementById("overlayText");
 const overlayDesc = document.getElementById("overlayDesc");
 const loginBtn = document.getElementById("loginBtn");
 const registerBtn = document.getElementById("registerBtn");
-const logoutBtn = document.getElementById("logoutBtn");
-const checkbox = document.getElementById("checkbox");
 const appContainer = document.getElementById("appContainer");
 const groupCodeInput = document.getElementById("groupCodeInput");
 const submitCodeBtn = document.getElementById("submitCodeBtn");
@@ -27,17 +25,34 @@ const projectContainer = document.getElementById("projectContainer");
 const noProjectsMsg = document.getElementById("noProjectsMsg");
 const projectPopup = document.getElementById("projectPopup");
 const deletePopup = document.getElementById("deletePopup");
-const settingsPopup = document.getElementById("settingsPopup");
 const projectNameInput = document.getElementById("projectNameInput");
+const profileLink = document.getElementById('profileLink');
+const profileView = document.getElementById('profileView');
+const profileName = document.getElementById('profileName');
+const profileEmail = document.getElementById('profileEmail');
+const profileDateJoined = document.getElementById('profileDateJoined');
+const profileBio = document.getElementById('profileBio');
+const profileLogoutBtn = document.getElementById('profileLogoutBtn');
+const darkModeToggle = document.getElementById('darkModeToggle');
+const notificationToggle = document.getElementById('notificationToggle');
+const privacyToggle = document.getElementById('privacyToggle');
+
 let selectedProject = null;
 let userType = null;
 let currentPlan = null;
+let currentDate = new Date();
 
 window.addEventListener('DOMContentLoaded', function() {
     loginPage.style.display = "none";
     choicePage.style.display = "none";
     roleChoicePage.style.display = "none";
     planChoicePage.style.display = "none";
+    
+    // Initialize dark mode toggle
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark-mode');
+        darkModeToggle.checked = true;
+    }
 });
 
 getStartedBtn.addEventListener("click", () => {
@@ -268,13 +283,12 @@ function closeGroupCodePopup() {
 function generateRandomCode(length) {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
+;
     for (let i = 0; i < length; i++) {
         result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return result;
 }
-
-// [Previous code remains the same until the updateSidebar function]
 
 function updateSidebar() {
     const dashboardLink = document.getElementById('dashboardLink');
@@ -284,10 +298,8 @@ function updateSidebar() {
     const myGroupLink = document.getElementById('myGroupLink');
     const upgradeLink = document.getElementById('upgradeLink');
     const profileLink = document.getElementById('profileLink');
-    const settingsLink = document.getElementById('settingsLink');
     const helpLink = document.getElementById('helpLink');
-    
-    // Remove all active classes first
+
     document.querySelectorAll('.sidebar a').forEach(link => {
         link.classList.remove('active');
     });
@@ -303,55 +315,67 @@ function updateSidebar() {
         tasksLink.style.display = 'none';
         myGroupLink.style.display = 'flex';
         upgradeLink.style.display = 'none';
-        profileLink.style.display = 'none';
+        profileLink.style.display = 'flex';
     }
 }
 
-// Navigation functions
 function showDashboard() {
     document.getElementById('dashboardView').style.display = 'block';
     document.getElementById('calendarView').style.display = 'none';
+    document.getElementById('profileView').style.display = 'none';
     document.getElementById('contentTitle').textContent = 'My Projects';
     document.getElementById('dashboardLink').classList.add('active');
     document.getElementById('calendarLink').classList.remove('active');
+    document.getElementById('profileLink').classList.remove('active');
 }
 
 function showCalendar() {
     document.getElementById('dashboardView').style.display = 'none';
     document.getElementById('calendarView').style.display = 'block';
+    document.getElementById('profileView').style.display = 'none';
     document.getElementById('contentTitle').textContent = 'Calendar';
     document.getElementById('dashboardLink').classList.remove('active');
     document.getElementById('calendarLink').classList.add('active');
+    document.getElementById('profileLink').classList.remove('active');
     generateCalendar(currentDate);
 }
 
-// Calendar functionality
-let currentDate = new Date();
+function showProfile() {
+    document.getElementById('dashboardView').style.display = 'none';
+    document.getElementById('calendarView').style.display = 'none';
+    document.getElementById('profileView').style.display = 'block';
+    document.getElementById('contentTitle').textContent = 'Profile';
+    document.getElementById('dashboardLink').classList.remove('active');
+    document.getElementById('calendarLink').classList.remove('active');
+    document.getElementById('profileLink').classList.add('active');
+    
+    // Load profile data
+    const username = document.getElementById('loginUsername').value.trim() || 
+                    document.getElementById('registerUsername').value.trim() || 
+                    'User';
+    profileName.textContent = username;
+    profileEmail.textContent = username.toLowerCase() + '@gmail.com';
+    profileDateJoined.textContent = new Date().toLocaleDateString();
+}
 
 function generateCalendar(date) {
     const calendarDays = document.getElementById('calendarDays');
     const currentMonthYear = document.getElementById('currentMonthYear');
-    
-    // Clear previous calendar days
+
     calendarDays.innerHTML = '';
-    
-    // Set month and year header
+
     const monthNames = ["January", "February", "March", "April", "May", "June",
                        "July", "August", "September", "October", "November", "December"];
     currentMonthYear.textContent = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
-    
-    // Get first day of month and total days in month
+
     const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
     const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
     const daysInMonth = lastDay.getDate();
-    
-    // Get days from previous month to show
+
     const prevMonthDays = firstDay.getDay();
-    
-    // Get days from next month to show
+
     const nextMonthDays = 6 - lastDay.getDay();
-    
-    // Previous month days
+
     const prevMonthLastDay = new Date(date.getFullYear(), date.getMonth(), 0).getDate();
     for (let i = prevMonthDays - 1; i >= 0; i--) {
         const dayElement = document.createElement('div');
@@ -359,14 +383,12 @@ function generateCalendar(date) {
         dayElement.textContent = prevMonthLastDay - i;
         calendarDays.appendChild(dayElement);
     }
-    
-    // Current month days
+
     const today = new Date();
     for (let i = 1; i <= daysInMonth; i++) {
         const dayElement = document.createElement('div');
         dayElement.textContent = i;
-        
-        // Highlight today
+
         if (date.getFullYear() === today.getFullYear() && 
             date.getMonth() === today.getMonth() && 
             i === today.getDate()) {
@@ -375,8 +397,7 @@ function generateCalendar(date) {
         
         calendarDays.appendChild(dayElement);
     }
-    
-    // Next month days
+
     for (let i = 1; i <= nextMonthDays; i++) {
         const dayElement = document.createElement('div');
         dayElement.classList.add('next-month');
@@ -385,7 +406,6 @@ function generateCalendar(date) {
     }
 }
 
-// Event listeners for navigation
 document.getElementById('dashboardLink').addEventListener('click', (e) => {
     e.preventDefault();
     showDashboard();
@@ -396,7 +416,11 @@ document.getElementById('calendarLink').addEventListener('click', (e) => {
     showCalendar();
 });
 
-// Event listeners for calendar navigation
+document.getElementById('profileLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    showProfile();
+});
+
 document.getElementById('prevMonth').addEventListener('click', () => {
     currentDate.setMonth(currentDate.getMonth() - 1);
     generateCalendar(currentDate);
@@ -407,9 +431,7 @@ document.getElementById('nextMonth').addEventListener('click', () => {
     generateCalendar(currentDate);
 });
 
-
-// [Rest of your existing JavaScript code remains the same]
-logoutBtn.addEventListener("click", (e) => {
+profileLogoutBtn.addEventListener("click", (e) => {
     e.preventDefault();
     userType = null;
     currentPlan = null;
@@ -440,14 +462,6 @@ function showProjectPopup() {
 
 function closeProjectPopup() {
     projectPopup.classList.remove("show");
-}
-
-function showSettingsPopup() {
-    settingsPopup.classList.add("show");
-}
-
-function closeSettingsPopup() {
-    settingsPopup.classList.remove("show");
 }
 
 function addProject() {
@@ -501,24 +515,7 @@ function closeModal() {
     document.getElementById("subscriptionModal").classList.remove("show");
 }
 
-function togglePlan(type) {
-    const soloBtn = document.querySelector(".plan-toggle-btn button:first-child");
-    const groupBtn = document.querySelector(".plan-toggle-btn button:last-child");
-    
-    if (type === 'solo') {
-        document.getElementById("solo-plans").style.display = "flex";
-        document.getElementById("group-plans").style.display = "none";
-        soloBtn.classList.add("active");
-        groupBtn.classList.remove("active");
-    } else {
-        document.getElementById("solo-plans").style.display = "none";
-        document.getElementById("group-plans").style.display = "flex";
-        soloBtn.classList.remove("active");
-        groupBtn.classList.add("active");
-    }
-}
-
-checkbox.addEventListener('change', function() {
+darkModeToggle.addEventListener('change', function() {
     if (this.checked) {
         document.body.classList.add('dark-mode');
     } else {
@@ -526,11 +523,6 @@ checkbox.addEventListener('change', function() {
     }
     localStorage.setItem('darkMode', this.checked);
 });
-
-if (localStorage.getItem('darkMode') === 'true') {
-    document.body.classList.add('dark-mode');
-    checkbox.checked = true;
-}
 
 window.addEventListener('click', (e) => {
     if (e.target === document.getElementById('subscriptionModal')) {
@@ -541,9 +533,6 @@ window.addEventListener('click', (e) => {
     }
     if (e.target === deletePopup) {
         closeDeletePopup();
-    }
-    if (e.target === settingsPopup) {
-        closeSettingsPopup();
     }
     if (e.target === groupCodePopup) {
         closeGroupCodePopup();
@@ -606,90 +595,11 @@ document.querySelectorAll('button, a').forEach(btn => {
     });
 });
 
-document.getElementById('calendarLink').addEventListener('click', function(e) {
-    e.preventDefault();
-    toggleView('calendar');
-});
-
-function toggleView(view) {
-    const contentTitle = document.getElementById('contentTitle');
-    const projectContainer = document.getElementById('projectContainer');
-    const calendarContainer = document.getElementById('calendarContainer');
-    const calendarEl = document.getElementById('calendar');
-    
-    if (view === 'calendar') {
-        if (!window.calendar) {
-            window.calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
-                },
-                events: [
-                    {
-                        title: 'Team Meeting',
-                        start: new Date(),
-                        color: '#f0c14b'
-                    }
-                ],
-                eventClick: function(info) {
-                    alert('Event: ' + info.event.title);
-                },
-                dateClick: function(info) {
-                    alert('Clicked on: ' + info.dateStr);
-                }
-            });
-            window.calendar.render();
-        }
-        
-        contentTitle.textContent = 'Calendar';
-        projectContainer.style.display = 'none';
-        calendarContainer.style.display = 'block';
-        window.calendar.render();
-    } else {
-        contentTitle.textContent = 'My Projects';
-        projectContainer.style.display = 'grid';
-        calendarContainer.style.display = 'none';
-    }
-}
-// Event listeners for sidebar navigation
-document.getElementById('settingsLink').addEventListener('click', (e) => {
-    e.preventDefault();
-    showSettingsPopup();
-});
-
 document.getElementById('upgradeLink').addEventListener('click', (e) => {
     e.preventDefault();
     openModal();
 });
 
-// Update showDashboard function to include active states
-function showDashboard() {
-    document.getElementById('dashboardView').style.display = 'block';
-    document.getElementById('calendarView').style.display = 'none';
-    document.getElementById('contentTitle').textContent = 'My Projects';
-    
-    // Remove all active states
-    document.querySelectorAll('.sidebar a').forEach(link => {
-        link.classList.remove('active');
-    });
-    document.getElementById('dashboardLink').classList.add('active');
-}
-
-// Update showCalendar function to include active states
-function showCalendar() {
-    document.getElementById('dashboardView').style.display = 'none';
-    document.getElementById('calendarView').style.display = 'block';
-    document.getElementById('contentTitle').textContent = 'Calendar';
-    
-    // Remove all active states
-    document.querySelectorAll('.sidebar a').forEach(link => {
-        link.classList.remove('active');
-    });
-    document.getElementById('calendarLink').classList.add('active');
-    generateCalendar(currentDate);
-}
 function sortProjects() {
     const projects = Array.from(document.querySelectorAll('.card'));
     const sortValue = sortSelect.value;
@@ -706,8 +616,7 @@ function sortProjects() {
         }
         return 0;
     });
-    
-    // Re-append sorted projects
+
     projects.forEach(project => {
         projectContainer.insertBefore(project, noProjectsMsg);
     });
