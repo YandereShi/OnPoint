@@ -240,10 +240,22 @@
 
         <div id="projectPopup" class="popup">
             <h2>New Project</h2>
-            <input type="text" id="projectNameInput" placeholder="Project Name">
+            <input type="text" id="projectNameInput" placeholder="Project Title" class="project-title-input">
+            <div class="task-section">
+                <p class="task-limit-text">Add up to 5 initial tasks:</p>
+                <div class="task-input-group">
+                    <input type="text" id="newTaskInput" placeholder="Add a task...">
+                    <input type="date" id="newTaskDate">
+                    <input type="time" id="newTaskTime">
+                    <button id="newTaskBtn"><i class="fas fa-plus"></i></button>
+                </div>
+                <div id="newTaskList" class="task-list">
+                    <!-- Tasks will be added here -->
+                </div>
+            </div>
             <div class="popup-buttons">
-                <button class="yes-btn">Create</button>
-                <button class="cancel-btn">Cancel</button>
+                <button class="yes-btn" id="saveProjectBtn">Create Project</button>
+                <button class="cancel-btn" onclick="closeProjectPopup()">Cancel</button>
             </div>
         </div>
 
@@ -283,7 +295,23 @@
             </div>
         </div>
     </div>
-
+    <div id="projectDetailsPopup" class="popup">
+        <h2 id="projectDetailsTitle"></h2>
+        <div class="task-section">
+            <div class="task-input-group">
+                <input type="text" id="taskInput" placeholder="Add a task...">
+                <input type="date" id="taskDate">
+                <input type="time" id="taskTime">
+                <button id="addTaskBtn"><i class="fas fa-plus"></i></button>
+            </div>
+            <div id="taskList" class="task-list">
+                <!-- Tasks will be added here dynamically -->
+            </div>
+        </div>
+        <div class="popup-buttons">
+            <button class="cancel-btn" id="cancelProjectDetailsBtn">Close</button>
+        </div>
+    </div>
     <script src="script.js"></script>
 </body>
 </html>

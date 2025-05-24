@@ -40,7 +40,15 @@ const dashboardTopbar = document.getElementById('dashboardTopbar');
 const fabButton = document.getElementById('fabButton');
 const changePictureBtn = document.getElementById('changePictureBtn');
 const profileUpload = document.getElementById('profileUpload');
+const projectDetailsPopup = document.getElementById('projectDetailsPopup');
+const projectDetailsTitle = document.getElementById('projectDetailsTitle');
+const saveProjectDetailsBtn = document.getElementById('saveProjectDetailsBtn');
+const cancelProjectDetailsBtn = document.getElementById('cancelProjectDetailsBtn');
+const taskInput = document.getElementById('taskInput');
+const addTaskBtn = document.getElementById('addTaskBtn');
+const taskList = document.getElementById('taskList');
 
+let currentProjectCard = null;
 let selectedProject = null;
 let userType = null;
 let currentPlan = null;
@@ -369,7 +377,6 @@ function showProfile() {
 function generateCalendar(date) {
     const calendarDays = document.getElementById('calendarDays');
     const currentMonthYear = document.getElementById('currentMonthYear');
-
     calendarDays.innerHTML = '';
 
     const monthNames = ["January", "February", "March", "April", "May", "June",
@@ -381,7 +388,6 @@ function generateCalendar(date) {
     const daysInMonth = lastDay.getDate();
 
     const prevMonthDays = firstDay.getDay();
-
     const nextMonthDays = 6 - lastDay.getDay();
 
     const prevMonthLastDay = new Date(date.getFullYear(), date.getMonth(), 0).getDate();
@@ -392,16 +398,37 @@ function generateCalendar(date) {
         calendarDays.appendChild(dayElement);
     }
 
-    const today = new Date();
+    const allTasks = getAllTasks();
+
     for (let i = 1; i <= daysInMonth; i++) {
         const dayElement = document.createElement('div');
-        dayElement.textContent = i;
+        const dateSpan = document.createElement('span');
+        dateSpan.className = 'calendar-date';
+        dateSpan.textContent = i;
 
-        if (date.getFullYear() === today.getFullYear() && 
-            date.getMonth() === today.getMonth() && 
-            i === today.getDate()) {
+        const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+
+        const dayTasks = allTasks.filter(task => {
+            const taskDate = task.dueDate.split('T')[0];
+            return taskDate === dateStr;
+        });
+
+        if (dayTasks.length > 0) {
+            const taskCount = document.createElement('div');
+            taskCount.className = 'task-count';
+            taskCount.textContent = dayTasks.length;
+            dateSpan.appendChild(taskCount);
+        }
+
+        dayElement.appendChild(dateSpan);
+
+        if (isToday(new Date(date.getFullYear(), date.getMonth(), i))) {
             dayElement.classList.add('today');
         }
+
+        dayElement.addEventListener('click', () => {
+            showDayTasks(i, date.getMonth(), date.getFullYear(), dayTasks);
+        });
         
         calendarDays.appendChild(dayElement);
     }
@@ -412,6 +439,100 @@ function generateCalendar(date) {
         dayElement.textContent = i;
         calendarDays.appendChild(dayElement);
     }
+}
+
+function getAllTasks() {
+    const allTasks = [];
+    const projectCards = document.querySelectorAll('.card');
+    
+    projectCards.forEach(card => {
+        const projectId = card.dataset.id;
+        const projectName = card.querySelector('.project-title').textContent;
+        
+        if (projectId) {
+            try {
+                const tasks = JSON.parse(localStorage.getItem(projectId) || '[]');
+                tasks.forEach(task => {
+                    if (task.dueDate) {
+                        allTasks.push({
+                            ...task,
+                            projectName: projectName
+                        });
+                    }
+                });
+            } catch (e) {
+                console.error('Error parsing tasks:', e);
+            }
+        }
+    });
+    
+    return allTasks;
+}
+
+function isToday(date) {
+    const today = new Date();
+    return date.getDate() === today.getDate() &&
+           date.getMonth() === today.getMonth() &&
+           date.getFullYear() === today.getFullYear();
+}
+
+function showDayTasks(day, month, year, tasks) {
+    const existingPopup = document.querySelector('.day-tasks-popup');
+    if (existingPopup) {
+        existingPopup.remove();
+    }
+
+    const popup = document.createElement('div');
+    popup.className = 'day-tasks-popup';
+
+    const monthNames = ["January", "February", "March", "April", "May", "June",
+                       "July", "August", "September", "October", "November", "December"];
+    
+    const tasksHTML = tasks.length > 0 
+        ? tasks.map(task => `
+            <div class="day-task-item">
+                <div>
+                    <div class="task-text ${task.completed ? 'completed' : ''}">${task.text}</div>
+                    <div class="day-task-project">${task.projectName}</div>
+                </div>
+                <div class="day-task-time">${task.dueTime || ''}</div>
+            </div>
+        `).join('')
+        : '<div style="text-align: center; padding: 20px;">No tasks for this day</div>';
+
+    popup.innerHTML = `
+        <div class="day-tasks-header">
+            <h3>${monthNames[month]} ${day}, ${year}</h3>
+            <button class="day-tasks-close">&times;</button>
+        </div>
+        <div class="day-tasks-list">
+            ${tasksHTML}
+        </div>
+    `;
+
+    document.body.appendChild(popup);
+
+    const backdrop = document.createElement('div');
+    backdrop.className = 'popup-backdrop';
+    document.body.appendChild(backdrop);
+
+    setTimeout(() => {
+        popup.classList.add('show');
+        backdrop.classList.add('show');
+    }, 10);
+
+    const closeBtn = popup.querySelector('.day-tasks-close');
+    const closePopup = () => {
+        popup.classList.remove('show');
+        backdrop.classList.remove('show');
+        setTimeout(() => {
+            popup.remove();
+            backdrop.remove();
+        }, 300);
+    };
+
+    closeBtn.addEventListener('click', closePopup);
+    backdrop.addEventListener('click', closePopup);
 }
 
 document.getElementById('dashboardLink').addEventListener('click', (e) => {
@@ -463,26 +584,112 @@ profileLogoutBtn.addEventListener("click", (e) => {
     }, 450);
 });
 
+let initialTasks = [];
+
 function showProjectPopup() {
     projectNameInput.value = "";
+    initialTasks = [];
+    document.getElementById('newTaskList').innerHTML = '';
     projectPopup.classList.add("show");
 }
 
-function closeProjectPopup() {
-    projectPopup.classList.remove("show");
+document.getElementById('newTaskBtn').addEventListener('click', () => {
+    const taskInput = document.getElementById('newTaskInput');
+    const dateInput = document.getElementById('newTaskDate');
+    const timeInput = document.getElementById('newTaskTime');
+    
+    if (initialTasks.length >= 5) {
+        alert("Maximum of 5 tasks allowed!");
+        return;
+    }
+    
+    if (!taskInput.value.trim() || !dateInput.value || !timeInput.value) {
+        alert("Please fill in all task fields (task name, date, and time)");
+        return;
+    }
+    
+    addInitialTask(
+        taskInput.value.trim(),
+        dateInput.value,
+        timeInput.value
+    );
+    taskInput.value = '';
+    dateInput.value = '';
+    timeInput.value = '';
+});
+
+function addInitialTask(text, date, time) {
+    const taskItem = document.createElement('div');
+    taskItem.className = 'task-item new-task'; // Add new-task class
+    
+    const taskText = document.createElement('div');
+    taskText.className = 'task-text';
+    taskText.textContent = text;
+
+    const taskDateTime = document.createElement('div');
+    taskDateTime.className = 'task-datetime';
+    if (date) {
+        taskDateTime.textContent = `${date} ${time || ''}`;
+    }
+    
+    const deleteBtn = document.createElement('div');
+    deleteBtn.className = 'task-delete';
+    deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+    
+    deleteBtn.addEventListener('click', () => {
+        const index = initialTasks.findIndex(t => t.text === text && t.dueDate === date);
+        if (index > -1) {
+            initialTasks.splice(index, 1);
+        }
+        taskItem.remove();
+    });
+    
+    taskItem.appendChild(taskText);
+    taskItem.appendChild(taskDateTime);
+    taskItem.appendChild(deleteBtn);
+    
+    document.getElementById('newTaskList').appendChild(taskItem);
+    
+    initialTasks.push({
+        text: text,
+        completed: false,
+        dueDate: date,
+        dueTime: time,
+        projectName: projectNameInput.value.trim()
+    });
 }
 
-function addProject() {
-    let projectName = projectNameInput.value.trim();
+document.getElementById('saveProjectBtn').addEventListener('click', () => {
+    const projectName = projectNameInput.value.trim();
     if (projectName === "") {
         alert("Please enter a project name.");
         return;
     }
 
+    const projectId = generateProjectId();
     let project = document.createElement("div");
     project.classList.add("card");
-    project.textContent = projectName;
     project.dataset.created = new Date().toISOString();
+    project.dataset.id = projectId;
+
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'project-title';
+    titleDiv.textContent = projectName;
+    project.appendChild(titleDiv);
+
+    const bucketLines = document.createElement('div');
+    bucketLines.className = 'bucket-lines';
+    project.appendChild(bucketLines);
+
+    const bucketFill = document.createElement('div');
+    bucketFill.className = 'bucket-fill';
+    bucketFill.style.height = '0%';
+    project.appendChild(bucketFill);
+
+    const progressText = document.createElement('div');
+    progressText.className = 'progress-text';
+    progressText.textContent = '0%';
+    project.appendChild(progressText);
 
     project.addEventListener("contextmenu", function(e) {
         e.preventDefault();
@@ -491,19 +698,38 @@ function addProject() {
     });
 
     project.addEventListener("click", function() {
-        console.log("Project clicked:", projectName);
+        currentProjectCard = project;
+        projectDetailsTitle.textContent = projectName;
+        loadTasks(project.dataset.id);
+        projectDetailsPopup.classList.add('show');
     });
 
     projectContainer.insertBefore(project, noProjectsMsg);
     noProjectsMsg.style.display = "none";
-    closeProjectPopup();
-}
 
+    if (initialTasks.length > 0) {
+        initialTasks = initialTasks.map(task => ({
+            ...task,
+            projectName: projectName
+        }));
+        localStorage.setItem(projectId, JSON.stringify(initialTasks));
+    }
+
+    closeProjectPopup();
+    updateCalendarEvents();
+});
+
+function closeProjectPopup() {
+    projectPopup.classList.remove("show");
+}
 
 function deleteProject() {
     if (selectedProject) {
+        // Remove tasks from localStorage when deleting project
+        localStorage.removeItem(selectedProject.dataset.id);
         projectContainer.removeChild(selectedProject);
         selectedProject = null;
+        updateCalendarEvents();
     }
     closeDeletePopup();
     if (projectContainer.children.length === 1) { 
@@ -551,25 +777,109 @@ window.addEventListener('click', (e) => {
     }
 });
 
-window.addEventListener('DOMContentLoaded', () => {
-    if (projectContainer.children.length === 1) {
-        const sampleProjects = ['Techno', 'Project 2', 'Project 3'];
-        sampleProjects.forEach(project => {
-            const projectElement = document.createElement('div');
-            projectElement.classList.add('card');
-            projectElement.textContent = project;
-            
-            projectElement.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                selectedProject = projectElement;
-                deletePopup.classList.add('show');
-            });
-            
-            projectContainer.insertBefore(projectElement, noProjectsMsg);
-        });
-        noProjectsMsg.style.display = 'none';
+function addTaskToList(text, completed = false, projectId, dueDate = null, dueTime = null) {
+    const taskItem = document.createElement('div');
+    taskItem.className = 'task-item';
+    
+    // Create checkbox and other elements
+    const checkbox = document.createElement('div');
+    checkbox.className = `task-checkbox${completed ? ' checked' : ''}`;
+    
+    const taskText = document.createElement('div');
+    taskText.className = `task-text${completed ? ' completed' : ''}`;
+    taskText.textContent = text;
+
+    const taskDateTime = document.createElement('div');
+    taskDateTime.className = 'task-datetime';
+    if (dueDate) {
+        taskDateTime.textContent = `${dueDate} ${dueTime || ''}`;
     }
-});
+    
+    // Add elements to task item
+    taskItem.appendChild(checkbox);
+    taskItem.appendChild(taskText);
+    taskItem.appendChild(taskDateTime);
+    
+    // Add event listeners
+    checkbox.addEventListener('click', () => {
+        checkbox.classList.toggle('checked');
+        taskText.classList.toggle('completed');
+        saveTasks(projectId);
+        updateProjectProgress(projectId);
+    });
+    
+    taskList.appendChild(taskItem);
+    updateCalendarEvents();
+    updateProjectProgress(projectId);
+}
+
+function saveTasks(projectId) {
+    const tasks = [];
+    taskList.querySelectorAll('.task-item').forEach(item => {
+        const dateTimeText = item.querySelector('.task-datetime').textContent;
+        let [date] = dateTimeText.split(' ');
+        
+        tasks.push({
+            text: item.querySelector('.task-text').textContent,
+            completed: item.querySelector('.task-checkbox').classList.contains('checked'),
+            dueDate: date,
+            dueTime: dateTimeText.split(' ')[1] || '',
+            projectName: currentProjectCard.querySelector('.project-title').textContent
+        });
+    });
+    
+    localStorage.setItem(projectId, JSON.stringify(tasks));
+    generateCalendar(currentDate); // Refresh calendar
+}
+
+function updateProjectProgress(projectId) {
+    const tasks = JSON.parse(localStorage.getItem(projectId) || '[]');
+    const totalTasks = tasks.length;
+    const completedTasks = tasks.filter(task => task.completed).length;
+    const progress = totalTasks ? (completedTasks / totalTasks) * 100 : 0;
+    
+    const projectCard = document.querySelector(`.card[data-id="${projectId}"]`);
+    if (projectCard) {
+        let progressText = projectCard.querySelector('.progress-text');
+        let bucketFill = projectCard.querySelector('.bucket-fill');
+        
+        if (!progressText) {
+            progressText = document.createElement('div');
+            progressText.className = 'progress-text';
+            bucketFill = document.createElement('div');
+            bucketFill.className = 'bucket-fill';
+            const bucketLines = document.createElement('div');
+            bucketLines.className = 'bucket-lines';
+            projectCard.appendChild(bucketLines);
+            projectCard.appendChild(bucketFill);
+            projectCard.appendChild(progressText);
+        }
+        
+        bucketFill.style.height = `${progress}%`;
+        progressText.textContent = `${Math.round(progress)}%`;
+    }
+}
+
+function updateCalendarEvents() {
+    const allTasks = [];
+    const projectIds = Array.from(document.querySelectorAll('.card')).map(card => card.dataset.id);
+    
+    projectIds.forEach(id => {
+        if (id) {
+            const tasks = JSON.parse(localStorage.getItem(id) || '[]');
+            if (tasks.length > 0) {
+                const projectName = document.querySelector(`.card[data-id="${id}"] .project-title`).textContent;
+                const processedTasks = tasks.map(task => ({
+                    ...task,
+                    projectName: projectName
+                }));
+                allTasks.push(...processedTasks);
+            }
+        }
+    });
+
+    generateCalendar(currentDate, allTasks);
+}
 
 document.addEventListener('touchstart', function() {}, {passive: true});
 sortSelect.addEventListener('change', sortProjects);
@@ -609,8 +919,6 @@ document.getElementById('upgradeLink').addEventListener('click', (e) => {
     openModal();
 });
 fabButton.addEventListener("click", showProjectPopup);
-document.querySelector('#projectPopup .yes-btn').addEventListener('click', addProject);
-document.querySelector('#projectPopup .cancel-btn').addEventListener('click', closeProjectPopup);
 
 function sortProjects() {
     const projects = Array.from(document.querySelectorAll('.card'));
@@ -647,4 +955,63 @@ profileUpload.addEventListener('change', (e) => {
         };
         reader.readAsDataURL(file);
     }
+});
+
+projectContainer.addEventListener('click', function(e) {
+    const projectCard = e.target.closest('.card');
+    if (!projectCard) return;
+    
+    currentProjectCard = projectCard;
+    projectDetailsTitle.textContent = projectCard.textContent;
+    
+    // Load existing tasks if any
+    loadTasks(projectCard.dataset.id || generateProjectId());
+    
+    projectDetailsPopup.classList.add('show');
+});
+
+function generateProjectId() {
+    return 'proj_' + Date.now();
+}
+
+function loadTasks(projectId) {
+    taskList.innerHTML = '';
+    const tasks = JSON.parse(localStorage.getItem(projectId) || '[]');
+    tasks.forEach(task => {
+        addTaskToList(
+            task.text, 
+            task.completed, 
+            projectId, 
+            task.dueDate || task.date,
+            task.dueTime || task.time
+        );
+    });
+    currentProjectCard.dataset.id = projectId;
+    
+    // Hide the task input group after project is created
+    document.querySelector('#projectDetailsPopup .task-input-group').style.display = 'none';
+}
+
+addTaskBtn.addEventListener('click', () => {
+    const text = taskInput.value.trim();
+    const date = document.getElementById('taskDate').value;
+    const time = document.getElementById('taskTime').value;
+    
+    if (text) {
+        addTaskToList(text, false, currentProjectCard.dataset.id, date, time);
+        saveTasks(currentProjectCard.dataset.id);
+        taskInput.value = '';
+        document.getElementById('taskDate').value = '';
+        document.getElementById('taskTime').value = '';
+    }
+});
+
+taskInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        addTaskBtn.click();
+    }
+});
+
+cancelProjectDetailsBtn.addEventListener('click', () => {
+    projectDetailsPopup.classList.remove('show');
 });
