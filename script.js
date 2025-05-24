@@ -587,6 +587,15 @@ profileLogoutBtn.addEventListener("click", (e) => {
 let initialTasks = [];
 
 function showProjectPopup() {
+    if (userType === 'solo') {
+        const projectCount = document.querySelectorAll('.card').length;
+        if (projectCount >= 2) {
+            alert("Free plan is limited to 2 projects. Please upgrade to create more projects.");
+            openModal();
+            return;
+        }
+    }
+
     projectNameInput.value = "";
     initialTasks = [];
     document.getElementById('newTaskList').innerHTML = '';
@@ -607,6 +616,14 @@ document.getElementById('newTaskBtn').addEventListener('click', () => {
         alert("Please fill in all task fields (task name, date, and time)");
         return;
     }
+
+    const selectedDateTime = new Date(`${dateInput.value}T${timeInput.value}`);
+    const now = new Date();
+    
+    if (selectedDateTime < now) {
+        alert("Task date and time cannot be in the past!");
+        return;
+    }
     
     addInitialTask(
         taskInput.value.trim(),
@@ -620,7 +637,7 @@ document.getElementById('newTaskBtn').addEventListener('click', () => {
 
 function addInitialTask(text, date, time) {
     const taskItem = document.createElement('div');
-    taskItem.className = 'task-item new-task'; // Add new-task class
+    taskItem.className = 'task-item new-task'; 
     
     const taskText = document.createElement('div');
     taskText.className = 'task-text';
@@ -663,6 +680,11 @@ document.getElementById('saveProjectBtn').addEventListener('click', () => {
     const projectName = projectNameInput.value.trim();
     if (projectName === "") {
         alert("Please enter a project name.");
+        return;
+    }
+
+    if (initialTasks.length === 0) {
+        alert("Please add at least one task to create a project.");
         return;
     }
 
@@ -725,7 +747,7 @@ function closeProjectPopup() {
 
 function deleteProject() {
     if (selectedProject) {
-        // Remove tasks from localStorage when deleting project
+
         localStorage.removeItem(selectedProject.dataset.id);
         projectContainer.removeChild(selectedProject);
         selectedProject = null;
@@ -780,8 +802,7 @@ window.addEventListener('click', (e) => {
 function addTaskToList(text, completed = false, projectId, dueDate = null, dueTime = null) {
     const taskItem = document.createElement('div');
     taskItem.className = 'task-item';
-    
-    // Create checkbox and other elements
+
     const checkbox = document.createElement('div');
     checkbox.className = `task-checkbox${completed ? ' checked' : ''}`;
     
@@ -794,13 +815,11 @@ function addTaskToList(text, completed = false, projectId, dueDate = null, dueTi
     if (dueDate) {
         taskDateTime.textContent = `${dueDate} ${dueTime || ''}`;
     }
-    
-    // Add elements to task item
+
     taskItem.appendChild(checkbox);
     taskItem.appendChild(taskText);
     taskItem.appendChild(taskDateTime);
-    
-    // Add event listeners
+
     checkbox.addEventListener('click', () => {
         checkbox.classList.toggle('checked');
         taskText.classList.toggle('completed');
@@ -829,7 +848,7 @@ function saveTasks(projectId) {
     });
     
     localStorage.setItem(projectId, JSON.stringify(tasks));
-    generateCalendar(currentDate); // Refresh calendar
+    generateCalendar(currentDate); 
 }
 
 function updateProjectProgress(projectId) {
@@ -963,8 +982,7 @@ projectContainer.addEventListener('click', function(e) {
     
     currentProjectCard = projectCard;
     projectDetailsTitle.textContent = projectCard.textContent;
-    
-    // Load existing tasks if any
+
     loadTasks(projectCard.dataset.id || generateProjectId());
     
     projectDetailsPopup.classList.add('show');
@@ -987,8 +1005,7 @@ function loadTasks(projectId) {
         );
     });
     currentProjectCard.dataset.id = projectId;
-    
-    // Hide the task input group after project is created
+
     document.querySelector('#projectDetailsPopup .task-input-group').style.display = 'none';
 }
 
@@ -996,6 +1013,19 @@ addTaskBtn.addEventListener('click', () => {
     const text = taskInput.value.trim();
     const date = document.getElementById('taskDate').value;
     const time = document.getElementById('taskTime').value;
+    
+    if (!text || !date || !time) {
+        alert("Please fill in all task fields (task name, date, and time)");
+        return;
+    }
+
+    const selectedDateTime = new Date(`${date}T${time}`);
+    const now = new Date();
+    
+    if (selectedDateTime < now) {
+        alert("Task date and time cannot be in the past!");
+        return;
+    }
     
     if (text) {
         addTaskToList(text, false, currentProjectCard.dataset.id, date, time);
