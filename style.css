@@ -1874,25 +1874,3 @@ button, a, input, .card, .choice-card, .fab {
     max-height: 300px;
     overflow-y: auto;
 }
-#feedbackPopup, #feedbackThanksPopup {
-    z-index: 2000;
-    max-width: 400px;
-    min-width: 300px;
-    text-align: center;
-    position: fixed;
-}
-
-#feedbackPopup .close {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    font-size: 22px;
-    background: none;
-    border: none;
-    color: var(--text-color);
-    cursor: pointer;
-    transition: color 0.2s;
-}
-#feedbackPopup .close:hover {
-    color: var(--primary-color);
-}
