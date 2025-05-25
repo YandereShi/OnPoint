@@ -48,10 +48,20 @@ const taskInput = document.getElementById('taskInput');
 const addTaskBtn = document.getElementById('addTaskBtn');
 const taskList = document.getElementById('taskList');
 const sidebar = document.querySelector('.sidebar');
+const myGroupView = document.getElementById('myGroupView');
+const myGroupLink = document.getElementById('myGroupLink');
+const helpLink = document.getElementById('helpLink');
+const feedbackPopup = document.getElementById('feedbackPopup');
+const feedbackThanksPopup = document.getElementById('feedbackThanksPopup');
+const closeFeedbackPopup = document.getElementById('closeFeedbackPopup');
+const sendFeedbackBtn = document.getElementById('sendFeedbackBtn');
+const closeThanksBtn = document.getElementById('closeThanksBtn');
+const feedbackText = document.getElementById('feedbackText');
 
 let currentProjectCard = null;
 let selectedProject = null;
 let userType = null;
+let userRole = null; // Add this new variable to track admin/employee role
 let currentPlan = null;
 let currentDate = new Date();
 
@@ -95,24 +105,81 @@ toggleBtn.addEventListener("click", () => {
     }
 });
 
+// --- LocalStorage Register/Login Logic ---
+
+function getAccounts() {
+    return JSON.parse(localStorage.getItem('accounts') || '[]');
+}
+
+function saveAccounts(accounts) {
+    localStorage.setItem('accounts', JSON.stringify(accounts));
+}
+
+// Register
+registerBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const username = document.getElementById("registerUsername").value.trim();
+    const email = document.getElementById("registerEmail").value.trim();
+    const password = document.getElementById("registerPassword").value.trim();
+
+    if (username === "" || email === "" || password === "") {
+        alert("Please fill in all fields");
+        return;
+    }
+
+    let accounts = getAccounts();
+    if (accounts.some(acc => acc.username === username)) {
+        alert("Username already exists!");
+        return;
+    }
+    if (accounts.some(acc => acc.email === email)) {
+        alert("Email already exists!");
+        return;
+    }
+
+    accounts.push({ username, email, password });
+    saveAccounts(accounts);
+
+    alert("Registration successful! Please log in.");
+
+    // Show login form after registration
+    loginContainer.classList.remove("active");
+    
+    // Clear the registration form
+    document.getElementById("registerUsername").value = "";
+    document.getElementById("registerEmail").value = "";
+    document.getElementById("registerPassword").value = "";
+});
+
+// Login
 loginBtn.addEventListener("click", (e) => {
     e.preventDefault();
     const username = document.getElementById("loginUsername").value.trim();
     const password = document.getElementById("loginPassword").value.trim();
-    
+
     if (username === "" || password === "") {
         alert("Please enter both username and password");
         return;
     }
 
-    loginPage.classList.add("hide");
+    let accounts = getAccounts();
+    const user = accounts.find(acc => acc.username === username && acc.password === password);
 
+    if (!user) {
+        alert("Invalid username or password!");
+        return;
+    }
+
+    // Optionally, save current user info in localStorage
+    localStorage.setItem('currentUser', JSON.stringify(user));
+
+    // Continue to next page
+    loginPage.classList.add("hide");
     setTimeout(() => {
         loginPage.style.display = "none";
         choicePage.style.display = "flex";
         choicePage.style.opacity = "0";
         choicePage.style.transform = "translateY(20px)";
-        
         setTimeout(() => {
             choicePage.style.opacity = "1";
             choicePage.style.transform = "translateY(0)";
@@ -209,6 +276,7 @@ adminChoice.addEventListener("click", () => {
 });
 
 employeeChoice.addEventListener("click", () => {
+    userRole = 'employee'; // Set role as employee
     showCodeEntryPopup();
 });
 
@@ -231,6 +299,7 @@ submitCodeBtn.addEventListener("click", (e) => {
     }
 
     userType = 'group';
+    // userRole is already set to 'employee' from employeeChoice click
     updateSidebar();
     
     closeCodeEntryPopup();
@@ -256,6 +325,7 @@ document.querySelectorAll('.choose-plan-btn').forEach(btn => {
     btn.addEventListener('click', function() {
         currentPlan = this.parentElement.getAttribute('data-plan');
         userType = 'group';
+        userRole = 'admin'; // Set role as admin for plan choosers
         updateSidebar();
         
         planChoicePage.classList.remove("show");
@@ -303,7 +373,6 @@ function generateRandomCode(length) {
 
 function updateSidebar() {
     const dashboardLink = document.getElementById('dashboardLink');
-    const chatsLink = document.getElementById('chatsLink');
     const calendarLink = document.getElementById('calendarLink');
     const tasksLink = document.getElementById('tasksLink');
     const myGroupLink = document.getElementById('myGroupLink');
@@ -316,17 +385,23 @@ function updateSidebar() {
     });
     
     if (userType === 'solo') {
-        chatsLink.style.display = 'none';
         tasksLink.style.display = 'none';
         myGroupLink.style.display = 'none';
         upgradeLink.style.display = 'flex';
         profileLink.style.display = 'flex';
+        fabButton.style.display = 'flex';
     } else if (userType === 'group') {
-        chatsLink.style.display = 'flex';
         tasksLink.style.display = 'none';
         myGroupLink.style.display = 'flex';
         upgradeLink.style.display = 'none';
         profileLink.style.display = 'flex';
+        
+        // Hide FAB for group employees, show for group admins
+        if (userRole === 'employee') {
+            fabButton.style.display = 'none';
+        } else {
+            fabButton.style.display = 'flex';
+        }
     }
 }
 
@@ -339,7 +414,13 @@ function showDashboard() {
     document.getElementById('calendarLink').classList.remove('active');
     document.getElementById('profileLink').classList.remove('active');
     dashboardTopbar.style.display = 'flex';
-    fabButton.style.display = 'flex';
+    
+    // Only show FAB if user has permission (not a group employee)
+    if (userType === 'solo' || (userType === 'group' && userRole === 'admin')) {
+        fabButton.style.display = 'flex';
+    } else {
+        fabButton.style.display = 'none';
+    }
 }
 
 function showCalendar() {
@@ -538,17 +619,35 @@ function showDayTasks(day, month, year, tasks) {
 
 document.getElementById('dashboardLink').addEventListener('click', (e) => {
     e.preventDefault();
+    myGroupView.style.display = 'none';
+    myGroupLink.classList.remove('active');
     showDashboard();
 });
 
 document.getElementById('calendarLink').addEventListener('click', (e) => {
     e.preventDefault();
+    myGroupView.style.display = 'none';
+    myGroupLink.classList.remove('active');
     showCalendar();
 });
 
 document.getElementById('profileLink').addEventListener('click', (e) => {
     e.preventDefault();
+    myGroupView.style.display = 'none';
+    myGroupLink.classList.remove('active');
     showProfile();
+});
+
+document.getElementById('myGroupLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.querySelectorAll('.content-view').forEach(view => {
+        view.style.display = 'none';
+    });
+    myGroupView.style.display = 'block';
+    document.querySelectorAll('.sidebar a').forEach(link => {
+        link.classList.remove('active');
+    });
+    e.currentTarget.classList.add('active');
 });
 
 document.getElementById('prevMonth').addEventListener('click', () => {
@@ -564,6 +663,7 @@ document.getElementById('nextMonth').addEventListener('click', () => {
 profileLogoutBtn.addEventListener("click", (e) => {
     e.preventDefault();
     userType = null;
+    userRole = null; // Reset role on logout
     currentPlan = null;
     
     appContainer.classList.remove("show");
@@ -595,6 +695,11 @@ function showProjectPopup() {
             openModal();
             return;
         }
+        document.querySelector('.task-section').style.display = 'block';
+        document.querySelector('.image-upload-section').style.display = 'none';
+    } else if (userType === 'group') {
+        document.querySelector('.task-section').style.display = 'none';
+        document.querySelector('.image-upload-section').style.display = 'block';
     }
 
     projectNameInput.value = "";
@@ -606,6 +711,27 @@ function showProjectPopup() {
     fabButton.classList.add('disabled');
     fabButton.setAttribute('disabled', 'disabled');
 }
+
+// Add new function to handle image upload
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        const preview = document.getElementById('imagePreview');
+        const imageName = document.getElementById('imageName');
+        
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            imageName.textContent = file.name;
+        }
+        
+        reader.readAsDataURL(file);
+    }
+}
+
+// Add event listener for image upload
+document.getElementById('imageUpload').addEventListener('change', handleImageUpload);
 
 function closeProjectPopup() {
     projectPopup.classList.remove("show");
@@ -713,67 +839,116 @@ function addInitialTask(text, date, time) {
 
 document.getElementById('saveProjectBtn').addEventListener('click', () => {
     const projectName = projectNameInput.value.trim();
-    if (projectName === "") {
-        alert("Please enter a project name.");
-        return;
+    
+    if (userType === 'group') {
+        const imageUpload = document.getElementById('imageUpload');
+        const projectDate = document.getElementById('projectDate');
+        const projectTime = document.getElementById('projectTime');
+        
+        if (projectName === "") {
+            alert("Please enter a project title.");
+            return;
+        }
+        if (!imageUpload.files[0]) {
+            alert("Please upload an image.");
+            return;
+        }
+        if (!projectDate.value || !projectTime.value) {
+            alert("Please select both date and time.");
+            return;
+        }
+
+        // Check if date and time are not in the past
+        const selectedDateTime = new Date(`${projectDate.value}T${projectTime.value}`);
+        const now = new Date();
+        if (selectedDateTime < now) {
+            alert("Date and time cannot be in the past!");
+            return;
+        }
+
+        // Create project card for admin
+        const projectId = generateProjectId();
+        let project = document.createElement("div");
+        project.classList.add("card");
+        project.dataset.created = new Date().toISOString();
+        project.dataset.id = projectId;
+
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'project-title';
+        titleDiv.textContent = projectName;
+        project.appendChild(titleDiv);
+
+        // Store project data
+        const projectData = {
+            name: projectName,
+            date: projectDate.value,
+            time: projectTime.value,
+            image: imageUpload.files[0].name
+        };
+        localStorage.setItem(projectId, JSON.stringify(projectData));
+
+        projectContainer.insertBefore(project, noProjectsMsg);
+        noProjectsMsg.style.display = "none";
+        closeProjectPopup();
+    } else {
+        // Existing solo user logic
+        if (projectName === "") {
+            alert("Please enter a project name.");
+            return;
+        }
+
+        const projectId = generateProjectId();
+        let project = document.createElement("div");
+        project.classList.add("card");
+        project.dataset.created = new Date().toISOString();
+        project.dataset.id = projectId;
+
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'project-title';
+        titleDiv.textContent = projectName;
+        project.appendChild(titleDiv);
+
+        const bucketLines = document.createElement('div');
+        bucketLines.className = 'bucket-lines';
+        project.appendChild(bucketLines);
+
+        const bucketFill = document.createElement('div');
+        bucketFill.className = 'bucket-fill';
+        bucketFill.style.height = '0%';
+        project.appendChild(bucketFill);
+
+        const progressText = document.createElement('div');
+        progressText.className = 'progress-text';
+        progressText.textContent = '0%';
+        project.appendChild(progressText);
+
+        project.addEventListener("contextmenu", function(e) {
+            e.preventDefault();
+            selectedProject = project;
+            deletePopup.classList.add("show");
+        });
+
+        project.addEventListener("click", function() {
+            currentProjectCard = project;
+            projectDetailsTitle.textContent = projectName;
+            loadTasks(project.dataset.id);
+            projectDetailsPopup.classList.add('show');
+        });
+
+        projectContainer.insertBefore(project, noProjectsMsg);
+        noProjectsMsg.style.display = "none";
+
+        if (initialTasks.length > 0) {
+            initialTasks = initialTasks.map(task => ({
+                ...task,
+                projectName: projectName
+            }));
+            localStorage.setItem(projectId, JSON.stringify(initialTasks));
+        }
+
+        closeProjectPopup();
+        updateCalendarEvents();
     }
-
-    if (initialTasks.length === 0) {
-        alert("Please add at least one task to create a project.");
-        return;
-    }
-
-    const projectId = generateProjectId();
-    let project = document.createElement("div");
-    project.classList.add("card");
-    project.dataset.created = new Date().toISOString();
-    project.dataset.id = projectId;
-
-    const titleDiv = document.createElement('div');
-    titleDiv.className = 'project-title';
-    titleDiv.textContent = projectName;
-    project.appendChild(titleDiv);
-
-    const bucketLines = document.createElement('div');
-    bucketLines.className = 'bucket-lines';
-    project.appendChild(bucketLines);
-
-    const bucketFill = document.createElement('div');
-    bucketFill.className = 'bucket-fill';
-    bucketFill.style.height = '0%';
-    project.appendChild(bucketFill);
-
-    const progressText = document.createElement('div');
-    progressText.className = 'progress-text';
-    progressText.textContent = '0%';
-    project.appendChild(progressText);
-
-    project.addEventListener("contextmenu", function(e) {
-        e.preventDefault();
-        selectedProject = project;
-        deletePopup.classList.add("show");
-    });
-
-    project.addEventListener("click", function() {
-        currentProjectCard = project;
-        projectDetailsTitle.textContent = projectName;
-        loadTasks(project.dataset.id);
-        projectDetailsPopup.classList.add('show');
-    });
-
-    projectContainer.insertBefore(project, noProjectsMsg);
-    noProjectsMsg.style.display = "none";
-
-    if (initialTasks.length > 0) {
-        initialTasks = initialTasks.map(task => ({
-            ...task,
-            projectName: projectName
-        }));
-        localStorage.setItem(projectId, JSON.stringify(initialTasks));
-    }
-
-    closeProjectPopup();
-    updateCalendarEvents();
 });
 
 function closeProjectPopup() {
@@ -1030,25 +1205,81 @@ function generateProjectId() {
 
 function loadTasks(projectId) {
     taskList.innerHTML = '';
-    const tasks = JSON.parse(localStorage.getItem(projectId) || '[]');
-    tasks.forEach(task => {
-        addTaskToList(
-            task.text, 
-            task.completed, 
-            projectId, 
-            task.dueDate || task.date,
-            task.dueTime || task.time
-        );
-    });
+    const projectData = JSON.parse(localStorage.getItem(projectId) || '[]');
+    
+    if (userType === 'group') {
+        // Clear existing content
+        document.querySelector('#projectDetailsPopup .task-section').style.display = 'none';
+        
+        // Create image container if not exists
+        let imageContainer = document.querySelector('.project-image-container');
+        if (!imageContainer) {
+            imageContainer = document.createElement('div');
+            imageContainer.className = 'project-image-container';
+            document.querySelector('#projectDetailsPopup').insertBefore(
+                imageContainer,
+                document.querySelector('#projectDetailsPopup .popup-buttons')
+            );
+        }
+
+        // Update image container content
+        imageContainer.innerHTML = `
+            <img src="${projectData.imageData}" class="project-image" alt="Project Image">
+            <div class="image-actions">
+                <button class="image-action-btn" onclick="downloadImage('${projectId}')">
+                    <i class="fas fa-download"></i> Download
+                </button>
+                <button class="image-action-btn" onclick="openImageInNewTab('${projectId}')">
+                    <i class="fas fa-external-link-alt"></i> Open in New Tab
+                </button>
+            </div>
+            <div class="project-datetime">
+                <strong>Date:</strong> ${projectData.date} <strong>Time:</strong> ${projectData.time}
+            </div>
+        `;
+    } else {
+        // Solo user view - show task list but hide input section
+        document.querySelector('#projectDetailsPopup .task-section').style.display = 'block';
+        
+        // Hide the task input group for solo users viewing existing projects
+        const taskInputGroup = document.querySelector('#projectDetailsPopup .task-input-group');
+        if (taskInputGroup) {
+            taskInputGroup.style.display = 'none';
+        }
+        
+        const tasks = Array.isArray(projectData) ? projectData : [];
+        tasks.forEach(task => {
+            addTaskToList(
+                task.text,
+                task.completed,
+                projectId,
+                task.dueDate || task.date,
+                task.dueTime || task.time
+            );
+        });
+    }
+
     currentProjectCard.dataset.id = projectId;
-
-    document.querySelector('#projectDetailsPopup .task-input-group').style.display = 'none';
-
     sidebar.classList.add('disabled');
     document.querySelectorAll('.card').forEach(card => {
         card.style.pointerEvents = 'none';
         card.style.opacity = '0.5';
     });
+}
+
+function downloadImage(projectId) {
+    const projectData = JSON.parse(localStorage.getItem(projectId));
+    const link = document.createElement('a');
+    link.href = projectData.imageData;
+    link.download = `project-${projectId}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function openImageInNewTab(projectId) {
+    const projectData = JSON.parse(localStorage.getItem(projectId));
+    window.open(projectData.imageData, '_blank');
 }
 
 addTaskBtn.addEventListener('click', () => {
@@ -1093,4 +1324,88 @@ cancelProjectDetailsBtn.addEventListener('click', () => {
         card.style.pointerEvents = 'auto';
         card.style.opacity = '1';
     });
+});
+
+document.getElementById('myGroupLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.querySelectorAll('.content-view').forEach(view => {
+        view.style.display = 'none';
+    });
+    document.getElementById('myGroupView').style.display = 'block';
+    document.querySelectorAll('.sidebar a').forEach(link => {
+        link.classList.remove('active');
+    });
+    e.currentTarget.classList.add('active');
+});
+
+helpLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    feedbackPopup.classList.add('show');
+    feedbackText.value = '';
+    
+    // Disable sidebar and project cards when feedback popup is open
+    sidebar.classList.add('disabled');
+    fabButton.classList.add('disabled');
+    fabButton.setAttribute('disabled', 'disabled');
+    
+    // Disable project cards
+    document.querySelectorAll('.card').forEach(card => {
+        card.style.pointerEvents = 'none';
+        card.style.opacity = '0.5';
+    });
+});
+
+closeFeedbackPopup.addEventListener('click', () => {
+    feedbackPopup.classList.remove('show');
+    
+    // Re-enable sidebar and project cards
+    sidebar.classList.remove('disabled');
+    fabButton.classList.remove('disabled');
+    fabButton.removeAttribute('disabled');
+    
+    // Re-enable project cards
+    document.querySelectorAll('.card').forEach(card => {
+        card.style.pointerEvents = 'auto';
+        card.style.opacity = '1';
+    });
+});
+
+sendFeedbackBtn.addEventListener('click', () => {
+    feedbackPopup.classList.remove('show');
+    feedbackThanksPopup.classList.add('show');
+    
+    // Re-enable sidebar and project cards
+    sidebar.classList.remove('disabled');
+    fabButton.classList.remove('disabled');
+    fabButton.removeAttribute('disabled');
+    
+    // Re-enable project cards
+    document.querySelectorAll('.card').forEach(card => {
+        card.style.pointerEvents = 'auto';
+        card.style.opacity = '1';
+    });
+});
+
+closeThanksBtn.addEventListener('click', () => {
+    feedbackThanksPopup.classList.remove('show');
+});
+
+window.addEventListener('click', (e) => {
+    if (e.target === feedbackPopup) {
+        feedbackPopup.classList.remove('show');
+        
+        // Re-enable sidebar and project cards
+        sidebar.classList.remove('disabled');
+        fabButton.classList.remove('disabled');
+        fabButton.removeAttribute('disabled');
+        
+        // Re-enable project cards
+        document.querySelectorAll('.card').forEach(card => {
+            card.style.pointerEvents = 'auto';
+            card.style.opacity = '1';
+        });
+    }
+    if (e.target === feedbackThanksPopup) {
+        feedbackThanksPopup.classList.remove('show');
+    }
 });
