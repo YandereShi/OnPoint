@@ -1043,6 +1043,12 @@ function loadTasks(projectId) {
     currentProjectCard.dataset.id = projectId;
 
     document.querySelector('#projectDetailsPopup .task-input-group').style.display = 'none';
+
+    sidebar.classList.add('disabled');
+    document.querySelectorAll('.card').forEach(card => {
+        card.style.pointerEvents = 'none';
+        card.style.opacity = '0.5';
+    });
 }
 
 addTaskBtn.addEventListener('click', () => {
@@ -1080,4 +1086,11 @@ taskInput.addEventListener('keypress', (e) => {
 
 cancelProjectDetailsBtn.addEventListener('click', () => {
     projectDetailsPopup.classList.remove('show');
+    
+    // Re-enable sidebar and project cards
+    sidebar.classList.remove('disabled');
+    document.querySelectorAll('.card').forEach(card => {
+        card.style.pointerEvents = 'auto';
+        card.style.opacity = '1';
+    });
 });
