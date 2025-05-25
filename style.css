@@ -367,6 +367,12 @@ body {
     z-index: 10;
 }
 
+.sidebar.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+    filter: grayscale(0.7);
+}
+
 .sidebar h2 {
     font-size: 32px;
     margin-bottom: 30px;
@@ -609,6 +615,12 @@ body {
     box-shadow: 0 6px 15px var(--shadow-color);
     z-index: 100;
     transition: all 0.3s ease;
+}
+
+.fab.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+    filter: grayscale(0.7);
 }
 
 .fab:hover {

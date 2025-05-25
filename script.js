@@ -47,6 +47,7 @@ const cancelProjectDetailsBtn = document.getElementById('cancelProjectDetailsBtn
 const taskInput = document.getElementById('taskInput');
 const addTaskBtn = document.getElementById('addTaskBtn');
 const taskList = document.getElementById('taskList');
+const sidebar = document.querySelector('.sidebar');
 
 let currentProjectCard = null;
 let selectedProject = null;
@@ -600,7 +601,41 @@ function showProjectPopup() {
     initialTasks = [];
     document.getElementById('newTaskList').innerHTML = '';
     projectPopup.classList.add("show");
+
+    sidebar.classList.add('disabled');
+    fabButton.classList.add('disabled');
+    fabButton.setAttribute('disabled', 'disabled');
 }
+
+function closeProjectPopup() {
+    projectPopup.classList.remove("show");
+
+    sidebar.classList.remove('disabled');
+    fabButton.classList.remove('disabled');
+    fabButton.removeAttribute('disabled');
+}
+
+window.addEventListener('click', (e) => {
+    if (e.target === document.getElementById('subscriptionModal')) {
+        closeModal();
+    }
+    if (e.target === deletePopup) {
+        closeDeletePopup();
+    }
+    if (e.target === groupCodePopup) {
+        closeGroupCodePopup();
+    }
+    if (e.target === codeEntryPopup) {
+        closeCodeEntryPopup();
+    }
+});
+
+window.addEventListener('keydown', function(e) {
+    if (projectPopup.classList.contains('show') && e.key === 'Escape') {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+});
 
 document.getElementById('newTaskBtn').addEventListener('click', () => {
     const taskInput = document.getElementById('newTaskInput');
@@ -743,6 +778,10 @@ document.getElementById('saveProjectBtn').addEventListener('click', () => {
 
 function closeProjectPopup() {
     projectPopup.classList.remove("show");
+
+    sidebar.classList.remove('disabled');
+    fabButton.classList.remove('disabled');
+    fabButton.removeAttribute('disabled');
 }
 
 function deleteProject() {
@@ -784,9 +823,6 @@ darkModeToggle.addEventListener('change', function() {
 window.addEventListener('click', (e) => {
     if (e.target === document.getElementById('subscriptionModal')) {
         closeModal();
-    }
-    if (e.target === projectPopup) {
-        closeProjectPopup();
     }
     if (e.target === deletePopup) {
         closeDeletePopup();
