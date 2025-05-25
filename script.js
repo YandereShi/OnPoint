@@ -50,7 +50,11 @@ const taskList = document.getElementById('taskList');
 const sidebar = document.querySelector('.sidebar');
 const myGroupView = document.getElementById('myGroupView');
 const myGroupLink = document.getElementById('myGroupLink');
-
+const feedbackLink = document.getElementById('feedbackLink');
+const feedbackPopup = document.getElementById('feedbackPopup');
+const feedbackInput = document.getElementById('feedbackInput');
+const sendFeedbackBtn = document.getElementById('sendFeedbackBtn');
+const feedbackNotification = document.getElementById('feedbackNotification');
 
 let currentProjectCard = null;
 let selectedProject = null;
@@ -1441,4 +1445,87 @@ document.getElementById('myGroupLink').addEventListener('click', (e) => {
         link.classList.remove('active');
     });
     e.currentTarget.classList.add('active');
+});
+
+feedbackLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    showFeedbackPopup();
+});
+
+function showFeedbackPopup() {
+    // Create and show backdrop
+    let backdrop = document.querySelector('.popup-backdrop');
+    if (!backdrop) {
+        backdrop = document.createElement('div');
+        backdrop.className = 'popup-backdrop';
+        document.body.appendChild(backdrop);
+    }
+    
+    feedbackPopup.classList.add('show');
+    backdrop.classList.add('show');
+    feedbackInput.value = '';
+    
+    // Disable sidebar and project cards
+    sidebar.classList.add('disabled');
+    document.querySelectorAll('.card').forEach(card => {
+        card.style.pointerEvents = 'none';
+        card.style.opacity = '0.5';
+    });
+    fabButton.classList.add('disabled');
+    fabButton.setAttribute('disabled', 'disabled');
+}
+
+function closeFeedbackPopup() {
+    const backdrop = document.querySelector('.popup-backdrop');
+    feedbackPopup.classList.remove('show');
+    if (backdrop) {
+        backdrop.classList.remove('show');
+        setTimeout(() => backdrop.remove(), 300);
+    }
+    
+    // Re-enable sidebar and project cards
+    sidebar.classList.remove('disabled');
+    document.querySelectorAll('.card').forEach(card => {
+        card.style.pointerEvents = 'auto';
+        card.style.opacity = '1';
+    });
+    fabButton.classList.remove('disabled');
+    fabButton.removeAttribute('disabled');
+}
+
+sendFeedbackBtn.addEventListener('click', () => {
+    if (feedbackInput.value.trim() === '') {
+        alert('Please enter your feedback before sending.');
+        return;
+    }
+    
+    // Here you would normally send the feedback to a server
+    // For now, we'll just show the thank you notification
+    closeFeedbackPopup();
+    showFeedbackNotification();
+    
+    // Clear the input
+    feedbackInput.value = '';
+});
+
+function showFeedbackNotification() {
+    feedbackNotification.classList.add('show');
+    
+    // Remove the notification after 5 seconds
+    setTimeout(() => {
+        hideFeedbackNotification();
+    }, 5000);
+}
+
+function hideFeedbackNotification() {
+    feedbackNotification.style.animation = 'slideOut 0.3s ease-out';
+    setTimeout(() => {
+        feedbackNotification.classList.remove('show');
+        feedbackNotification.style.animation = '';
+    }, 300);
+}
+
+// Add click event for notification close button
+document.querySelector('.notification-close').addEventListener('click', () => {
+    hideFeedbackNotification();
 });
