@@ -638,7 +638,7 @@ body {
     padding: 30px;
     border-radius: 15px;
     box-shadow: 0 10px 30px var(--shadow-color);
-    z-index: 2000; /* Ensure popup appears above other elements */
+    z-index: 2000; 
     color: var(--text-color);
     width: 90%;
     max-width: 500px;

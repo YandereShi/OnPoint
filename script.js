@@ -59,7 +59,7 @@ const feedbackNotification = document.getElementById('feedbackNotification');
 let currentProjectCard = null;
 let selectedProject = null;
 let userType = null;
-let userRole = null; // Add this new variable to track admin/employee role
+let userRole = null; 
 let currentPlan = null;
 let currentDate = new Date();
 
@@ -103,7 +103,6 @@ toggleBtn.addEventListener("click", () => {
     }
 });
 
-// --- LocalStorage Register/Login Logic ---
 
 function getAccounts() {
     return JSON.parse(localStorage.getItem('accounts') || '[]');
@@ -113,7 +112,6 @@ function saveAccounts(accounts) {
     localStorage.setItem('accounts', JSON.stringify(accounts));
 }
 
-// Register
 registerBtn.addEventListener("click", (e) => {
     e.preventDefault();
     const username = document.getElementById("registerUsername").value.trim();
@@ -140,16 +138,13 @@ registerBtn.addEventListener("click", (e) => {
 
     alert("Registration successful! Please log in.");
 
-    // Show login form after registration
     loginContainer.classList.remove("active");
-    
-    // Clear the registration form
+
     document.getElementById("registerUsername").value = "";
     document.getElementById("registerEmail").value = "";
     document.getElementById("registerPassword").value = "";
 });
 
-// Login
 loginBtn.addEventListener("click", (e) => {
     e.preventDefault();
     const username = document.getElementById("loginUsername").value.trim();
@@ -168,10 +163,8 @@ loginBtn.addEventListener("click", (e) => {
         return;
     }
 
-    // Optionally, save current user info in localStorage
     localStorage.setItem('currentUser', JSON.stringify(user));
 
-    // Continue to next page
     loginPage.classList.add("hide");
     setTimeout(() => {
         loginPage.style.display = "none";
@@ -274,7 +267,7 @@ adminChoice.addEventListener("click", () => {
 });
 
 employeeChoice.addEventListener("click", () => {
-    userRole = 'employee'; // Set role as employee
+    userRole = 'employee'; 
     showCodeEntryPopup();
 });
 
@@ -297,7 +290,7 @@ submitCodeBtn.addEventListener("click", (e) => {
     }
 
     userType = 'group';
-    // userRole is already set to 'employee' from employeeChoice click
+
     updateSidebar();
     
     closeCodeEntryPopup();
@@ -323,7 +316,7 @@ document.querySelectorAll('.choose-plan-btn').forEach(btn => {
     btn.addEventListener('click', function() {
         currentPlan = this.parentElement.getAttribute('data-plan');
         userType = 'group';
-        userRole = 'admin'; // Set role as admin for plan choosers
+        userRole = 'admin'; 
         updateSidebar();
         
         planChoicePage.classList.remove("show");
@@ -393,8 +386,7 @@ function updateSidebar() {
         myGroupLink.style.display = 'flex';
         upgradeLink.style.display = 'none';
         profileLink.style.display = 'flex';
-        
-        // Hide FAB for group employees, show for group admins
+
         if (userRole === 'employee') {
             fabButton.style.display = 'none';
         } else {
@@ -412,8 +404,7 @@ function showDashboard() {
     document.getElementById('calendarLink').classList.remove('active');
     document.getElementById('profileLink').classList.remove('active');
     dashboardTopbar.style.display = 'flex';
-    
-    // Only show FAB if user has permission (not a group employee)
+
     if (userType === 'solo' || (userType === 'group' && userRole === 'admin')) {
         fabButton.style.display = 'flex';
     } else {
@@ -533,7 +524,7 @@ function getAllTasks() {
             try {
                 const data = JSON.parse(localStorage.getItem(projectId) || '[]');
                 if (Array.isArray(data)) {
-                    // Solo project tasks
+
                     data.forEach(task => {
                         if (task.dueDate) {
                             allTasks.push({
@@ -543,7 +534,7 @@ function getAllTasks() {
                         }
                     });
                 } else if (data.date) {
-                    // Group project task
+
                     allTasks.push({
                         text: data.name || 'Project Deadline',
                         completed: false,
@@ -672,10 +663,57 @@ document.getElementById('nextMonth').addEventListener('click', () => {
 
 profileLogoutBtn.addEventListener("click", (e) => {
     e.preventDefault();
+
+    if (userType === 'solo' || (userType === 'group' && userRole === 'admin')) {
+        const projectCards = document.querySelectorAll('.card');
+        projectCards.forEach(card => {
+            const projectId = card.dataset.id;
+            if (projectId) {
+                localStorage.removeItem(projectId);
+                localStorage.removeItem(`${projectId}_tasks`);
+            }
+            card.remove();
+        });
+        noProjectsMsg.style.display = "block";
+    }
+
+    if (userType === 'group' && userRole === 'employee') {
+
+        const projectCards = document.querySelectorAll('.card');
+        projectCards.forEach(card => card.remove());
+
+        const assignmentData = {
+            id: 'assignment_project',
+            name: 'Assignment',
+            date: new Date().toISOString().slice(0, 10),
+            time: '23:59',
+            tasks: [],
+            progress: 0,
+            fileUrl: '',
+            fileName: ''
+        };
+
+        localStorage.setItem('assignment_project', JSON.stringify(assignmentData));
+        localStorage.removeItem('assignment_project_tasks');
+        localStorage.removeItem('assignment_submission');
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.dataset.id = 'assignment_project';
+        card.innerHTML = `
+            <h3 class="project-title">Assignment</h3>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 0%"></div>
+            </div>
+            <p class="progress-text">0%</p>
+        `;
+        projectContainer.appendChild(card);
+    }
+
     userType = null;
-    userRole = null; // Reset role on logout
+    userRole = null;
     currentPlan = null;
-    
+
     appContainer.classList.remove("show");
     appContainer.style.opacity = "0";
     appContainer.style.transform = "translateY(20px)";
@@ -683,6 +721,9 @@ profileLogoutBtn.addEventListener("click", (e) => {
     setTimeout(() => {
         appContainer.style.display = "none";
 
+        document.getElementById("loginUsername").value = "";
+        document.getElementById("loginPassword").value = "";
+        
         loginPage.style.display = "flex";
         loginPage.style.opacity = "0";
         loginPage.style.transform = "translateY(20px)";
@@ -722,7 +763,6 @@ function showProjectPopup() {
     fabButton.setAttribute('disabled', 'disabled');
 }
 
-// Add new function to handle image upload
 function handleImageUpload(event) {
     const file = event.target.files[0];
     if (file) {
@@ -740,7 +780,6 @@ function handleImageUpload(event) {
     }
 }
 
-// Add event listener for image upload
 document.getElementById('imageUpload').addEventListener('change', handleImageUpload);
 
 function closeProjectPopup() {
@@ -868,7 +907,6 @@ document.getElementById('saveProjectBtn').addEventListener('click', () => {
             return;
         }
 
-        // Check if date and time are not in the past
         const selectedDateTime = new Date(`${projectDate.value}T${projectTime.value}`);
         const now = new Date();
         if (selectedDateTime < now) {
@@ -876,7 +914,6 @@ document.getElementById('saveProjectBtn').addEventListener('click', () => {
             return;
         }
 
-        // Create project card for group
         const projectId = generateProjectId();
         let project = document.createElement("div");
         project.classList.add("card");
@@ -888,11 +925,9 @@ document.getElementById('saveProjectBtn').addEventListener('click', () => {
         titleDiv.textContent = projectName;
         project.appendChild(titleDiv);
 
-        // Store file as Blob URL
         const file = imageUpload.files[0];
         const fileUrl = URL.createObjectURL(file);
 
-        // Store project data
         const projectData = {
             name: projectName,
             date: projectDate.value,
@@ -905,10 +940,10 @@ document.getElementById('saveProjectBtn').addEventListener('click', () => {
         projectContainer.insertBefore(project, noProjectsMsg);
         noProjectsMsg.style.display = "none";
         closeProjectPopup();
-        updateCalendarEvents(); // Update calendar after adding project
+        updateCalendarEvents(); 
         return;
     } else {
-        // Existing solo user logic
+
         if (projectName === "") {
             alert("Please enter a project name.");
             return;
@@ -1220,7 +1255,6 @@ function generateProjectId() {
     return 'proj_' + Date.now();
 }
 
-// Update the loadTasks function to properly handle group project tasks
 function loadTasks(projectId) {
     taskList.innerHTML = '';
     const projectData = JSON.parse(localStorage.getItem(projectId) || '{}');
@@ -1230,7 +1264,7 @@ function loadTasks(projectId) {
             taskInputGroup.style.display = 'none';
         }
     }
-    // GROUP EMPLOYEE: Assignment project
+
     if (userType === 'group' && userRole === 'employee' && projectId === 'assignment_project') {
         document.querySelector('#projectDetailsPopup .task-section').style.display = 'none';
         sidebar.classList.add('disabled');
@@ -1239,7 +1273,6 @@ function loadTasks(projectId) {
             card.style.pointerEvents = 'none';
         });
 
-        // Remove previous file container if exists
         let fileContainer = document.querySelector('.project-file-container');
         if (fileContainer) fileContainer.remove();
 
@@ -1248,7 +1281,6 @@ function loadTasks(projectId) {
         fileContainer.style.textAlign = 'center';
         fileContainer.style.margin = '20px 0';
 
-        // --- Show Admin's Assignment File ---
         if (!projectData.fileUrl || !projectData.fileName) {
             const pdfPath = 'assignment.pdf';
             projectData.fileUrl = pdfPath;
@@ -1258,7 +1290,6 @@ function loadTasks(projectId) {
             return;
         }
 
-        // Show admin's assignment file
         fileContainer.innerHTML = `
             <div>
                 <strong>Assignment File:</strong><br>
@@ -1275,7 +1306,6 @@ function loadTasks(projectId) {
             <hr style="margin:20px 0;">
         `;
 
-        // --- Show Submission Section ---
         const submission = JSON.parse(localStorage.getItem('assignment_submission') || 'null');
         if (submission && submission.fileName) {
             fileContainer.innerHTML += `
@@ -1293,7 +1323,7 @@ function loadTasks(projectId) {
                 </div>
             `;
         } else {
-            // Upload form for employee
+
             fileContainer.innerHTML += `
                 <div style="margin-top:20px;">
                     <input type="file" id="employeeAssignmentUpload" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" style="display:none;">
@@ -1309,7 +1339,6 @@ function loadTasks(projectId) {
         const popup = document.getElementById('projectDetailsPopup');
         popup.insertBefore(fileContainer, popup.querySelector('.popup-buttons'));
 
-        // Upload logic
         if (!submission || !submission.fileName) {
             const uploadBtn = document.getElementById('employeeUploadBtn');
             const fileInput = document.getElementById('employeeAssignmentUpload');
@@ -1337,23 +1366,22 @@ function loadTasks(projectId) {
                         fileName: selectedFile.name,
                         fileUrl: blobUrl
                     }));
-                    // Make card green
+
                     const card = document.querySelector('.card[data-id="assignment_project"]');
                     if (card) card.style.background = '#7fe279';
-                    // Close popup
+
                     closeProjectDetailsPopup();
                 };
                 reader.readAsArrayBuffer(selectedFile);
             };
         } else {
-            // Make card green if already submitted
+
             const card = document.querySelector('.card[data-id="assignment_project"]');
             if (card) card.style.background = '#7fe279';
         }
         return;
     }
 
-    // ...existing code for admin and solo...
     if (userType === 'group') {
         document.querySelector('#projectDetailsPopup .task-section').style.display = 'none';
         sidebar.classList.add('disabled');
@@ -1361,7 +1389,7 @@ function loadTasks(projectId) {
             card.classList.add('disabled');
             card.style.pointerEvents = 'none';
         });
-        // Remove previous file container if exists
+
         let fileContainer = document.querySelector('.project-file-container');
         if (fileContainer) fileContainer.remove();
 
@@ -1388,7 +1416,6 @@ function loadTasks(projectId) {
             fileContainer.innerHTML = `<div>No file uploaded.</div>`;
         }
 
-        // --- Add Submission Button for Admins ---
         if (userRole === 'admin') {
             const submissionBtn = document.createElement('button');
             submissionBtn.textContent = 'View Submissions';
@@ -1404,7 +1431,7 @@ function loadTasks(projectId) {
         popup.insertBefore(fileContainer, popup.querySelector('.popup-buttons'));
         return;
     } else {
-        // Solo user view - show task list but hide input section
+
         document.querySelector('#projectDetailsPopup .task-section').style.display = 'block';
 
         const tasks = Array.isArray(projectData) ? projectData : [];
@@ -1422,7 +1449,6 @@ function loadTasks(projectId) {
     currentProjectCard.dataset.id = projectId;
 }
 
-// Update the getAllTasks function to handle both solo and group projects
 function getAllTasks() {
     const allTasks = [];
     const projectCards = document.querySelectorAll('.card');
@@ -1435,7 +1461,6 @@ function getAllTasks() {
             try {
                 const data = JSON.parse(localStorage.getItem(projectId) || '[]');
                 if (Array.isArray(data)) {
-                    // Solo project tasks
                     data.forEach(task => {
                         if (task.dueDate) {
                             allTasks.push({
@@ -1445,7 +1470,7 @@ function getAllTasks() {
                         }
                     });
                 } else if (data.date) {
-                    // Group project task
+
                     allTasks.push({
                         text: data.name || 'Project Deadline',
                         completed: false,
@@ -1463,7 +1488,6 @@ function getAllTasks() {
     return allTasks;
 }
 
-// Update the saveProjectBtn event listener for group projects
 document.getElementById('saveProjectBtn').addEventListener('click', () => {
     const projectName = projectNameInput.value.trim();
     
@@ -1485,7 +1509,6 @@ document.getElementById('saveProjectBtn').addEventListener('click', () => {
             return;
         }
 
-        // Check if date and time are not in the past
         const selectedDateTime = new Date(`${projectDate.value}T${projectTime.value}`);
         const now = new Date();
         if (selectedDateTime < now) {
@@ -1493,7 +1516,6 @@ document.getElementById('saveProjectBtn').addEventListener('click', () => {
             return;
         }
 
-        // Create project card for group
         const projectId = generateProjectId();
         let project = document.createElement("div");
         project.classList.add("card");
@@ -1505,10 +1527,9 @@ document.getElementById('saveProjectBtn').addEventListener('click', () => {
         titleDiv.textContent = projectName;
         project.appendChild(titleDiv);
 
-        // Read the image file
         const reader = new FileReader();
         reader.onload = function(e) {
-            // Store project data
+
             const projectData = {
                 name: projectName,
                 date: projectDate.value,
@@ -1520,13 +1541,12 @@ document.getElementById('saveProjectBtn').addEventListener('click', () => {
             projectContainer.insertBefore(project, noProjectsMsg);
             noProjectsMsg.style.display = "none";
             closeProjectPopup();
-            updateCalendarEvents(); // Update calendar after adding project
+            updateCalendarEvents(); 
         };
         reader.readAsDataURL(imageUpload.files[0]);
         
     } else {
-        // Existing solo project logic
-        // ... rest of the solo project code
+
     }
 });
 
@@ -1580,8 +1600,7 @@ taskInput.addEventListener('keypress', (e) => {
 
 cancelProjectDetailsBtn.addEventListener('click', () => {
     projectDetailsPopup.classList.remove('show');
-    
-    // Re-enable sidebar and project cards
+
     sidebar.classList.remove('disabled');
     document.querySelectorAll('.card').forEach(card => {
         card.style.pointerEvents = 'auto';
@@ -1607,7 +1626,7 @@ feedbackLink.addEventListener('click', (e) => {
 });
 
 function showFeedbackPopup() {
-    // Create and show backdrop
+
     let backdrop = document.querySelector('.popup-backdrop');
     if (!backdrop) {
         backdrop = document.createElement('div');
@@ -1618,8 +1637,7 @@ function showFeedbackPopup() {
     feedbackPopup.classList.add('show');
     backdrop.classList.add('show');
     feedbackInput.value = '';
-    
-    // Disable sidebar and project cards
+
     sidebar.classList.add('disabled');
     document.querySelectorAll('.card').forEach(card => {
         card.style.pointerEvents = 'none';
@@ -1636,8 +1654,7 @@ function closeFeedbackPopup() {
         backdrop.classList.remove('show');
         setTimeout(() => backdrop.remove(), 300);
     }
-    
-    // Re-enable sidebar and project cards
+
     sidebar.classList.remove('disabled');
     document.querySelectorAll('.card').forEach(card => {
         card.style.pointerEvents = 'auto';
@@ -1652,20 +1669,16 @@ sendFeedbackBtn.addEventListener('click', () => {
         alert('Please enter your feedback before sending.');
         return;
     }
-    
-    // Here you would normally send the feedback to a server
-    // For now, we'll just show the thank you notification
+
     closeFeedbackPopup();
     showFeedbackNotification();
-    
-    // Clear the input
+
     feedbackInput.value = '';
 });
 
 function showFeedbackNotification() {
     feedbackNotification.classList.add('show');
-    
-    // Remove the notification after 5 seconds
+
     setTimeout(() => {
         hideFeedbackNotification();
     }, 5000);
@@ -1679,7 +1692,6 @@ function hideFeedbackNotification() {
     }, 300);
 }
 
-// Add click event for notification close button
 document.querySelector('.notification-close').addEventListener('click', () => {
     hideFeedbackNotification();
 });
@@ -1690,13 +1702,11 @@ const groupEmployees = [
     { name: "Employee 3", id: "emp3" }
 ];
 
-// For demo: No one has submitted yet
 function showSubmissionPopup(projectId) {
     const submissionPopup = document.getElementById('submissionPopup');
     const submissionList = document.getElementById('submissionList');
     submissionList.innerHTML = '';
 
-    // Get employee names from My Group view
     const groupView = document.getElementById('myGroupView');
     const memberCards = groupView.querySelectorAll('.member-card');
     const employees = [];
@@ -1719,7 +1729,7 @@ function showSubmissionPopup(projectId) {
             row.style.justifyContent = 'space-between';
             row.style.margin = '10px 0';
 
-            if (idx === 2) { // Third employee (Rainier)
+            if (idx === 2) {
                 row.innerHTML = `
                     <span>${empName}</span>
                     <span style="display:flex;align-items:center;gap:8px;">
@@ -1749,7 +1759,6 @@ function closeProjectDetailsPopup() {
     const popup = document.getElementById('projectDetailsPopup');
     popup.classList.remove('show');
 
-    // Re-enable sidebar and project cards
     sidebar.classList.remove('disabled');
     document.querySelectorAll('.card').forEach(card => {
         card.classList.remove('disabled');
@@ -1757,19 +1766,19 @@ function closeProjectDetailsPopup() {
     });
 }
 function ensureAssignmentProjectForEmployee() {
-    // Only add if not already present
+
     const projectId = 'assignment_project';
     if (!localStorage.getItem(projectId)) {
         const projectData = {
             name: 'Assignment',
             date: new Date().toISOString().slice(0, 10),
             time: '23:59',
-            fileUrl: '', // No admin file for employee
+            fileUrl: '', 
             fileName: ''
         };
         localStorage.setItem(projectId, JSON.stringify(projectData));
     }
-    // Add the card to the dashboard if not present
+
     if (!document.querySelector(`.card[data-id="${projectId}"]`)) {
         let project = document.createElement("div");
         project.classList.add("card");
@@ -1793,9 +1802,9 @@ function ensureAssignmentProjectForEmployee() {
     }
 }
 employeeChoice.addEventListener("click", () => {
-    userRole = 'employee'; // Set role as employee
+    userRole = 'employee'; 
     showCodeEntryPopup();
-    // Add Assignment project after joining
+
     setTimeout(() => {
         ensureAssignmentProjectForEmployee();
     }, 500);
